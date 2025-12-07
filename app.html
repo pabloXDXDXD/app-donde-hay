@@ -160,15 +160,56 @@
                 currentSession = session;
             };
 
-            // Get initial session first, then set up auth state listener
+            // Offline-first session verification
             splashText.textContent = 'Verificando sesión...';
-            const { data: { session } } = await supabase.auth.getSession();
-            initializeView(session);
+            const isOnline = navigator.onLine;
+            
+            if (isOnline) {
+                // ONLINE: Validate token with server
+                const { data: { session } } = await supabase.auth.getSession();
+                
+                if (session) {
+                    // Valid session - store token for offline use
+                    localStorage.setItem('session_token', session.access_token);
+                    localStorage.setItem('user_id', session.user.id);
+                    initializeView(session);
+                } else {
+                    // No valid session - clear stored token
+                    localStorage.removeItem('session_token');
+                    localStorage.removeItem('user_id');
+                    initializeView(null);
+                }
+            } else {
+                // OFFLINE: Check for cached token
+                const cachedToken = localStorage.getItem('session_token');
+                const cachedUserId = localStorage.getItem('user_id');
+                
+                if (cachedToken && cachedUserId) {
+                    // Create a minimal session object for offline use
+                    const offlineSession = {
+                        access_token: cachedToken,
+                        user: { id: cachedUserId }
+                    };
+                    initializeView(offlineSession);
+                } else {
+                    // No cached token - redirect to login
+                    initializeView(null);
+                }
+            }
             
             // Listen for auth changes (login/logout)
             supabase.auth.onAuthStateChange((_event, newSession) => {
                 // Only reinitialize if session state actually changed
                 if ((!currentSession && newSession) || (currentSession && !newSession)) {
+                    // Store token on successful login
+                    if (newSession) {
+                        localStorage.setItem('session_token', newSession.access_token);
+                        localStorage.setItem('user_id', newSession.user.id);
+                    } else {
+                        // Clear token on logout
+                        localStorage.removeItem('session_token');
+                        localStorage.removeItem('user_id');
+                    }
                     initializeView(newSession);
                 }
             });
@@ -177,7 +218,7 @@
         function showSubView(subViewId) { document.getElementById('login-form').style.display = subViewId === 'login' ? 'block' : 'none'; document.getElementById('register-form').style.display = subViewId === 'register' ? 'block' : 'none'; }
         async function handleLogin() { const e=document.getElementById('l-email').value.trim(),p=document.getElementById('l-pass').value; if(!e||!p)return showToast('Completa los campos'); const{error}=await supabase.auth.signInWithPassword({email:e,password:p}); if(error)showToast(`Error: ${error.message}`); }
         async function handleRegister() { const e=document.getElementById('r-email').value.trim(),p=document.getElementById('r-pass').value,c=document.getElementById('r-pass-confirm').value; if(!e||!p)return showToast('Completa campos'); if(p.length<6)return showToast('Contraseña muy corta'); if(p!==c)return showToast('Las contraseñas no coinciden'); const{data,error}=await supabase.auth.signUp({email:e,password:p}); if(error)showToast(`Error: ${error.message}`); else{showToast('¡Cuenta creada! Revisa tu correo para confirmar.'); showSubView('login');} }
-        async function handleLogout() { await supabase.auth.signOut(); }
+        async function handleLogout() { try { await supabase.auth.signOut(); } finally { localStorage.removeItem('session_token'); localStorage.removeItem('user_id'); } }
 
         function initializeMenu() { loadCache(); renderAllUI(); refreshData(); startNetworkMonitor(); navigateTo('products-page', document.querySelector('.nav-item[data-page="products-page"]')); }
         function loadCache() { const s=localStorage.getItem('store_cache');if(s)STORE=JSON.parse(s); const p=localStorage.getItem('products_cache');if(p)PRODUCTS=JSON.parse(p); }
