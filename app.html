@@ -130,6 +130,7 @@
             const app = document.getElementById('app-container');
             const splashText = document.getElementById('splash-text');
             const splashScreen = document.getElementById('splash-screen');
+            let currentSession = null;
 
             const initializeView = (session) => {
                 const hasSession = !!session;
@@ -151,6 +152,8 @@
                         initializeMenu();
                     }
                 }, 300);
+                
+                currentSession = session;
             };
 
             // Get initial session first, then set up auth state listener
@@ -161,7 +164,7 @@
             // Listen for auth changes (login/logout)
             supabase.auth.onAuthStateChange((_event, newSession) => {
                 // Only reinitialize if session state actually changed
-                if ((!session && newSession) || (session && !newSession)) {
+                if ((!currentSession && newSession) || (currentSession && !newSession)) {
                     initializeView(newSession);
                 }
             });
