@@ -6,69 +6,626 @@
     <title>Mi App</title>
     <script src="./supabase.js"></script>
     <style>
-        :root { /* M3 Blue Dark Theme */
-            --md-sys-color-primary: #A8C7FA; --md-sys-color-on-primary: #0B3058;
-            --md-sys-color-primary-container: #264772; --md-sys-color-on-primary-container: #D4E3FF;
-            --md-sys-color-secondary-container: #3A4859; --md-sys-color-on-secondary-container: #D6E3F7;
-            --md-sys-color-background: #1A1C1E; --md-sys-color-on-background: #E2E2E6;
-            --md-sys-color-surface: #1A1C1E; --md-sys-color-surface-container: #1E2022;
-            --md-sys-color-surface-container-high: #292B2D; --md-sys-color-outline: #8D9199;
-            --md-sys-color-on-surface-variant: #C3C7CF; --md-sys-color-error: #F2B8B5;
+        /* Material Design 3 - Blue Dark Theme */
+        :root {
+            /* Primary colors */
+            --md-sys-color-primary: #A8C7FA;
+            --md-sys-color-on-primary: #0B3058;
+            --md-sys-color-primary-container: #264772;
+            --md-sys-color-on-primary-container: #D4E3FF;
+            
+            /* Secondary colors */
+            --md-sys-color-secondary-container: #3A4859;
+            --md-sys-color-on-secondary-container: #D6E3F7;
+            
+            /* Surface colors */
+            --md-sys-color-background: #1A1C1E;
+            --md-sys-color-on-background: #E2E2E6;
+            --md-sys-color-surface: #1A1C1E;
+            --md-sys-color-surface-container: #1E2022;
+            --md-sys-color-surface-container-high: #292B2D;
+            --md-sys-color-on-surface-variant: #C3C7CF;
+            --md-sys-color-outline: #8D9199;
+            
+            /* Error colors */
+            --md-sys-color-error: #F2B8B5;
             --md-sys-color-error-container: #8C1D18;
-            --status-checking-bg: rgba(158,158,158,.2); --status-checking-fg: #9e9e9e; --status-checking-dot: #757575;
-            --status-online-bg: rgba(76,175,80,.2); --status-online-fg: #81c784; --status-online-dot: #4caf50;
-            --status-offline-bg: rgba(244,67,54,.2); --status-offline-fg: #e57373; --status-offline-dot: #f44336;
+            
+            /* Connection status colors */
+            --status-checking-bg: rgba(158, 158, 158, 0.2);
+            --status-checking-fg: #9e9e9e;
+            --status-checking-dot: #757575;
+            --status-online-bg: rgba(76, 175, 80, 0.2);
+            --status-online-fg: #81c784;
+            --status-online-dot: #4caf50;
+            --status-offline-bg: rgba(244, 67, 54, 0.2);
+            --status-offline-fg: #e57373;
+            --status-offline-dot: #f44336;
+            
+            /* M3 spacing scale (8dp grid) */
+            --spacing-1: 4px;
+            --spacing-2: 8px;
+            --spacing-3: 12px;
+            --spacing-4: 16px;
+            --spacing-5: 20px;
+            --spacing-6: 24px;
+            --spacing-8: 32px;
+            --spacing-10: 40px;
+            --spacing-12: 48px;
         }
-        * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; font-family:system-ui, sans-serif; -webkit-user-select:none; user-select:none; }
-        html, body { height:100%; overflow:hidden; background:var(--md-sys-color-background); }
         
-        #splash-screen { position:fixed; inset:0; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:24px; background:var(--md-sys-color-background); z-index:9999; transition:opacity .4s ease; }
-        #splash-loader { width:48px; height:48px; border:4px solid var(--md-sys-color-primary-container); border-top-color:var(--md-sys-color-primary); border-radius:50%; animation:spin 1s linear infinite; }
-        #splash-text { color:var(--md-sys-color-on-surface-variant); font-size:14px; }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        /* Global reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            font-family: 'Roboto', system-ui, -apple-system, sans-serif;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        
+        html,
+        body {
+            height: 100%;
+            overflow: hidden;
+            background: var(--md-sys-color-background);
+            color: var(--md-sys-color-on-background);
+        }
+        
+        /* Splash screen */
+        #splash-screen {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: var(--spacing-6);
+            background: var(--md-sys-color-background);
+            z-index: 9999;
+            transition: opacity 0.4s ease;
+        }
+        
+        #splash-loader {
+            width: var(--spacing-12);
+            height: var(--spacing-12);
+            border: 4px solid var(--md-sys-color-primary-container);
+            border-top-color: var(--md-sys-color-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        #splash-text {
+            color: var(--md-sys-color-on-surface-variant);
+            font-size: 14px;
+            font-weight: 400;
+            line-height: 20px;
+            /* M3 Body Medium */
+        }
+        
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
 
-        .view { position:fixed; inset:0; display:none; flex-direction:column; background:var(--md-sys-color-background); }
-        .view.active { display:flex; animation:fadeIn .3s; }
-        @keyframes fadeIn{from{opacity:0} to{opacity:1}}
+        /* View management */
+        .view {
+            position: fixed;
+            inset: 0;
+            display: none;
+            flex-direction: column;
+            background: var(--md-sys-color-background);
+        }
         
-        /* Estilos generales y de componentes... */
-        #login-view .content, #menu-view .content { flex:1; overflow-y:auto; }
-        #login-view .content { display:flex; flex-direction:column; justify-content:center; padding:24px; max-width:400px; margin:0 auto; width:100%; }
-        #menu-view .content { padding:16px; padding-bottom:96px; }
-        .auth-header{text-align:center;margin-bottom:40px}.auth-header svg{width:64px;height:64px;fill:var(--md-sys-color-primary);margin-bottom:16px}.auth-header h1{font-size:28px;font-weight:400;color:var(--md-sys-color-on-background)}
-        .text-field{position:relative;margin-bottom:16px}.text-field label{position:absolute;left:16px;top:8px;font-size:12px;color:var(--md-sys-color-on-surface-variant);pointer-events:none;transition:all .2s}.text-field input{width:100%;height:56px;padding:20px 16px 8px 16px;background:var(--md-sys-color-surface-container);border:1px solid var(--md-sys-color-outline);border-radius:12px;color:var(--md-sys-color-on-background);font-size:16px;outline:none}.text-field input:focus{border-color:var(--md-sys-color-primary);border-width:2px;background:var(--md-sys-color-surface-container)}.text-field input:focus+label{color:var(--md-sys-color-primary)}
-        .btn-filled{height:40px;padding:0 24px;background:var(--md-sys-color-primary);color:var(--md-sys-color-on-primary);border:none;border-radius:20px;font-size:14px;font-weight:500;}.btn-text{height:40px;padding:0 24px;background:transparent;border:none;color:var(--md-sys-color-primary);font-size:14px;font-weight:500;}
-        .top-bar{height:56px;padding:0 16px;background:var(--md-sys-color-surface);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
-        .top-bar-title{font-size:22px;font-weight:500;color:var(--md-sys-color-primary);}
-        .status-chip{height:28px;padding:0 10px;border-radius:8px;display:flex;align-items:center;gap:6px;font-size:11px;font-weight:500;text-transform:uppercase;background:var(--status-checking-bg);color:var(--status-checking-fg)}.status-dot{width:6px;height:6px;border-radius:50%;background:var(--status-checking-dot)}
-        .status-chip.checking{background:var(--status-checking-bg);color:var(--status-checking-fg)}.status-chip.checking .status-dot{background:var(--status-checking-dot)}
-        .status-chip.online{background:var(--status-online-bg);color:var(--status-online-fg)}.status-chip.online .status-dot{background:var(--status-online-dot)}
-        .status-chip.offline{background:var(--status-offline-bg);color:var(--status-offline-fg)}.status-chip.offline .status-dot{background:var(--status-offline-dot)}
-        .page{display:none}.page.active{display:block}
-        #products-page{display:grid;grid-template-columns:repeat(auto-fill, minmax(160px, 1fr));gap:12px;}
-        .card{background:var(--md-sys-color-surface-container-high);border-radius:16px;padding:16px;margin-bottom:12px;display:flex;flex-direction:column;}
-        .empty-state{grid-column:1/-1;text-align:center;padding:48px 24px;color:var(--md-sys-color-on-surface-variant)}.empty-state svg{width:48px;height:48px;fill:currentColor;margin-bottom:16px}.empty-state h3{font-size:18px;font-weight:500;color:var(--md-sys-color-on-surface);margin-bottom:8px}
-        .card-product{justify-content:space-between;min-height:120px;}
-        .card-product .name{font-size:16px;font-weight:500;color:var(--md-sys-color-on-background);line-height:1.3;}
-        .card-product .category{font-size:12px;color:var(--md-sys-color-on-surface-variant);margin-top:4px;}
-        .card-product .price{font-size:18px;font-weight:700;color:var(--md-sys-color-primary);}
-        .card-actions{display:flex;justify-content:space-between;align-items:center;margin-top:12px;}
-        .icon-btn{background:none;border:none;color:var(--md-sys-color-on-surface-variant);padding:8px;border-radius:50%;cursor:pointer;margin:-8px;}
-        .fab{position:fixed;bottom:96px;right:16px;width:56px;height:56px;background:var(--md-sys-color-primary-container);color:var(--md-sys-color-on-primary-container);border:none;border-radius:16px;display:none;align-items:center;justify-content:center;z-index:50}.fab svg{width:24px;height:24px;fill:currentColor}
-        .nav-bar{position:fixed;bottom:0;left:0;right:0;height:80px;background:var(--md-sys-color-surface-container);display:flex;justify-content:space-around;z-index:100}
-        .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 0;background:none;border:none;color:var(--md-sys-color-on-surface-variant)}.nav-icon{width:64px;height:32px;border-radius:16px;display:flex;align-items:center;justify-content:center}.nav-icon svg{width:24px;height:24px;fill:currentColor}
-        .nav-item.active .nav-icon{background:var(--md-sys-color-secondary-container);color:var(--md-sys-color-on-secondary-container)}.nav-item.active{color:var(--md-sys-color-on-surface)}.nav-label{font-size:12px;font-weight:500}
-        .modal-overlay,.bottom-sheet-overlay{position:fixed;inset:0;background:rgba(26,28,30,.6);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);display:none;z-index:200;opacity:0;transition:opacity .3s ease}
-        .bottom-sheet-overlay{align-items:flex-end}
-        .modal-overlay{align-items:center;justify-content:center}
-        .bottom-sheet-overlay.active,.modal-overlay.active{display:flex;opacity:1}
-        .modal{background:var(--md-sys-color-surface-container-high);border-radius:28px;padding:24px;width:90%;max-width:320px}
-        .modal-title{font-size:24px;font-weight:400;margin-bottom:24px;color:var(--md-sys-color-on-surface)}.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:24px}
-        .bottom-sheet-content{background:var(--md-sys-color-surface-container-high);width:100%;padding:16px;padding-bottom:32px;border-radius:28px 28px 0 0;transform:translateY(100%);transition:transform .3s ease-out}
-        .bottom-sheet-overlay.active .bottom-sheet-content{transform:translateY(0)}
-        .bottom-sheet-title{font-size:20px;font-weight:500;margin-bottom:16px;padding:0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--md-sys-color-on-surface)}
-        .bottom-sheet-item{display:flex;align-items:center;gap:16px;width:100%;padding:12px 8px;border:none;background:transparent;color:var(--md-sys-color-on-surface-variant);font-size:16px;text-align:left;border-radius:8px;}.bottom-sheet-item:active{background:rgba(255,255,255,.05)}
-        .bottom-sheet-item svg{width:24px;height:24px;fill:currentColor}
+        .view.active {
+            display: flex;
+            animation: fadeIn 0.3s;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        
+        /* Login and menu views */
+        #login-view .content,
+        #menu-view .content {
+            flex: 1;
+            overflow-y: auto;
+        }
+        
+        #login-view .content {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: var(--spacing-6);
+            max-width: 400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        
+        #menu-view .content {
+            padding: var(--spacing-4);
+            padding-bottom: 96px;
+        }
+        
+        /* Authentication header */
+        .auth-header {
+            text-align: center;
+            margin-bottom: var(--spacing-10);
+        }
+        
+        .auth-header svg {
+            width: 64px;
+            height: 64px;
+            fill: var(--md-sys-color-primary);
+            margin-bottom: var(--spacing-4);
+        }
+        
+        .auth-header h1 {
+            font-size: 28px;
+            font-weight: 400;
+            line-height: 36px;
+            color: var(--md-sys-color-on-background);
+            /* M3 Headline Medium */
+        }
+
+        /* M3 Text Field Component */
+        .text-field {
+            position: relative;
+            margin-bottom: var(--spacing-4);
+        }
+        
+        .text-field label {
+            position: absolute;
+            left: var(--spacing-4);
+            top: var(--spacing-2);
+            font-size: 12px;
+            font-weight: 400;
+            line-height: 16px;
+            color: var(--md-sys-color-on-surface-variant);
+            pointer-events: none;
+            transition: all 0.2s;
+            /* M3 Body Small */
+        }
+        
+        .text-field input {
+            width: 100%;
+            height: 56px;
+            padding: var(--spacing-5) var(--spacing-4) var(--spacing-2) var(--spacing-4);
+            background: var(--md-sys-color-surface-container);
+            border: 1px solid var(--md-sys-color-outline);
+            border-radius: var(--spacing-3);
+            color: var(--md-sys-color-on-background);
+            font-size: 16px;
+            font-weight: 400;
+            line-height: 24px;
+            outline: none;
+            /* M3 Body Large */
+        }
+        
+        .text-field input:focus {
+            border-color: var(--md-sys-color-primary);
+            border-width: 2px;
+            background: var(--md-sys-color-surface-container);
+        }
+        
+        .text-field input:focus + label {
+            color: var(--md-sys-color-primary);
+        }
+
+        /* M3 Button Components */
+        .btn-filled {
+            height: 40px;
+            padding: 0 var(--spacing-6);
+            background: var(--md-sys-color-primary);
+            color: var(--md-sys-color-on-primary);
+            border: none;
+            border-radius: var(--spacing-5);
+            font-size: 14px;
+            font-weight: 500;
+            line-height: 20px;
+            cursor: pointer;
+            /* M3 Filled Button - for primary actions */
+            /* M3 Label Large */
+        }
+        
+        .btn-text {
+            height: 40px;
+            padding: 0 var(--spacing-6);
+            background: transparent;
+            border: none;
+            color: var(--md-sys-color-primary);
+            font-size: 14px;
+            font-weight: 500;
+            line-height: 20px;
+            cursor: pointer;
+            /* M3 Text Button - for secondary/less prominent actions */
+            /* M3 Label Large */
+        }
+        
+        /* Top bar */
+        .top-bar {
+            height: 56px;
+            padding: 0 var(--spacing-4);
+            background: var(--md-sys-color-surface);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+        
+        .top-bar-title {
+            font-size: 22px;
+            font-weight: 500;
+            line-height: 28px;
+            color: var(--md-sys-color-primary);
+            /* M3 Title Large */
+        }
+
+        /* Connection status chip */
+        .status-chip {
+            height: 28px;
+            padding: 0 10px;
+            border-radius: var(--spacing-2);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            font-weight: 500;
+            line-height: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: var(--status-checking-bg);
+            color: var(--status-checking-fg);
+            /* M3 Label Small */
+        }
+        
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--status-checking-dot);
+        }
+        
+        .status-chip.checking {
+            background: var(--status-checking-bg);
+            color: var(--status-checking-fg);
+        }
+        
+        .status-chip.checking .status-dot {
+            background: var(--status-checking-dot);
+        }
+        
+        .status-chip.online {
+            background: var(--status-online-bg);
+            color: var(--status-online-fg);
+        }
+        
+        .status-chip.online .status-dot {
+            background: var(--status-online-dot);
+        }
+        
+        .status-chip.offline {
+            background: var(--status-offline-bg);
+            color: var(--status-offline-fg);
+        }
+        
+        .status-chip.offline .status-dot {
+            background: var(--status-offline-dot);
+        }
+
+        /* Page management */
+        .page {
+            display: none;
+        }
+        
+        .page.active {
+            display: block;
+        }
+        
+        /* Products grid */
+        #products-page {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: var(--spacing-3);
+        }
+        
+        /* M3 Card Component */
+        .card {
+            background: var(--md-sys-color-surface-container-high);
+            border-radius: var(--spacing-4);
+            padding: var(--spacing-4);
+            margin-bottom: var(--spacing-3);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Empty state */
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: var(--spacing-12) var(--spacing-6);
+            color: var(--md-sys-color-on-surface-variant);
+        }
+        
+        .empty-state svg {
+            width: var(--spacing-12);
+            height: var(--spacing-12);
+            fill: currentColor;
+            margin-bottom: var(--spacing-4);
+        }
+        
+        .empty-state h3 {
+            font-size: 18px;
+            font-weight: 500;
+            line-height: 24px;
+            color: var(--md-sys-color-on-surface);
+            margin-bottom: var(--spacing-2);
+            /* M3 Title Medium */
+        }
+
+        /* Product card */
+        .card-product {
+            justify-content: space-between;
+            min-height: 120px;
+        }
+        
+        .card-product .name {
+            font-size: 16px;
+            font-weight: 500;
+            line-height: 24px;
+            color: var(--md-sys-color-on-background);
+            /* M3 Body Large */
+        }
+        
+        .card-product .category {
+            font-size: 12px;
+            font-weight: 400;
+            line-height: 16px;
+            color: var(--md-sys-color-on-surface-variant);
+            margin-top: var(--spacing-1);
+            /* M3 Body Small */
+        }
+        
+        .card-product .price {
+            font-size: 18px;
+            font-weight: 700;
+            line-height: 24px;
+            color: var(--md-sys-color-primary);
+            /* Custom - emphasized price */
+        }
+        
+        .card-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: var(--spacing-3);
+        }
+        
+        /* Icon button */
+        .icon-btn {
+            background: none;
+            border: none;
+            color: var(--md-sys-color-on-surface-variant);
+            padding: var(--spacing-2);
+            border-radius: 50%;
+            cursor: pointer;
+            margin: calc(-1 * var(--spacing-2));
+            /* M3 Icon Button */
+        }
+        
+        .icon-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+        
+        .icon-btn:active {
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        /* M3 Floating Action Button (FAB) */
+        .fab {
+            position: fixed;
+            bottom: 96px;
+            right: var(--spacing-4);
+            width: 56px;
+            height: 56px;
+            background: var(--md-sys-color-primary-container);
+            color: var(--md-sys-color-on-primary-container);
+            border: none;
+            border-radius: var(--spacing-4);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            /* M3 FAB - for primary screen action */
+        }
+        
+        .fab svg {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+        
+        .fab:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        /* M3 Navigation Bar */
+        .nav-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 80px;
+            background: var(--md-sys-color-surface-container);
+            display: flex;
+            justify-content: space-around;
+            z-index: 100;
+        }
+        
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: var(--spacing-1);
+            padding: var(--spacing-3) 0;
+            background: none;
+            border: none;
+            color: var(--md-sys-color-on-surface-variant);
+            cursor: pointer;
+        }
+        
+        .nav-icon {
+            width: 64px;
+            height: 32px;
+            border-radius: var(--spacing-4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s;
+        }
+        
+        .nav-icon svg {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+        
+        .nav-item.active .nav-icon {
+            background: var(--md-sys-color-secondary-container);
+            color: var(--md-sys-color-on-secondary-container);
+        }
+        
+        .nav-item.active {
+            color: var(--md-sys-color-on-surface);
+        }
+        
+        .nav-label {
+            font-size: 12px;
+            font-weight: 500;
+            line-height: 16px;
+            /* M3 Label Medium */
+        }
+
+        /* M3 Modal and Bottom Sheet overlays */
+        .modal-overlay,
+        .bottom-sheet-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(26, 28, 30, 0.6);
+            -webkit-backdrop-filter: blur(8px);
+            backdrop-filter: blur(8px);
+            display: none;
+            z-index: 200;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .bottom-sheet-overlay {
+            align-items: flex-end;
+        }
+        
+        .modal-overlay {
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .bottom-sheet-overlay.active,
+        .modal-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+        
+        /* M3 Modal */
+        .modal {
+            background: var(--md-sys-color-surface-container-high);
+            border-radius: 28px;
+            padding: var(--spacing-6);
+            width: 90%;
+            max-width: 320px;
+        }
+        
+        .modal-title {
+            font-size: 24px;
+            font-weight: 400;
+            line-height: 32px;
+            margin-bottom: var(--spacing-6);
+            color: var(--md-sys-color-on-surface);
+            /* M3 Headline Small */
+        }
+        
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: var(--spacing-2);
+            margin-top: var(--spacing-6);
+        }
+
+        /* M3 Bottom Sheet */
+        .bottom-sheet-content {
+            background: var(--md-sys-color-surface-container-high);
+            width: 100%;
+            padding: var(--spacing-4);
+            padding-bottom: var(--spacing-8);
+            border-radius: 28px 28px 0 0;
+            transform: translateY(100%);
+            transition: transform 0.3s ease-out;
+        }
+        
+        .bottom-sheet-overlay.active .bottom-sheet-content {
+            transform: translateY(0);
+        }
+        
+        .bottom-sheet-title {
+            font-size: 20px;
+            font-weight: 500;
+            line-height: 28px;
+            margin-bottom: var(--spacing-4);
+            padding: 0 var(--spacing-2);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: var(--md-sys-color-on-surface);
+            /* M3 Title Medium */
+        }
+        
+        .bottom-sheet-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-4);
+            width: 100%;
+            padding: var(--spacing-3) var(--spacing-2);
+            border: none;
+            background: transparent;
+            color: var(--md-sys-color-on-surface-variant);
+            font-size: 16px;
+            font-weight: 400;
+            line-height: 24px;
+            text-align: left;
+            border-radius: var(--spacing-2);
+            cursor: pointer;
+            /* M3 Body Large */
+        }
+        
+        .bottom-sheet-item:active {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .bottom-sheet-item svg {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
     </style>
 </head>
 <body>
@@ -82,24 +639,88 @@
     <div class="bottom-sheet-overlay" id="bottom-sheet-menu" onclick="closeBottomSheet()"></div>
     <div class="modal-overlay" id="modal-overlay"></div>
 
-    <!-- 🔥 INICIO DE LAS PLANTILLAS HTML (A PRUEBA DE ERRORES) -->
+    <!-- Templates for dynamic views -->
     <template id="template-login">
         <div id="login-view" class="view">
             <main class="content">
-                <div class="auth-header"><svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 8V6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9zm9 12H6V10h12v10zm-6-3c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/></svg><h1>Bienvenido</h1></div>
-                <div id="login-form">
-                    <div class="text-field"><input type="email" id="l-email" placeholder="Correo electrónico" autocomplete="email" aria-label="Correo electrónico"><label>Correo electrónico</label></div>
-                    <div class="text-field"><input type="password" id="l-pass" placeholder="Contraseña" autocomplete="current-password" aria-label="Contraseña"><label>Contraseña</label></div>
-                    <button class="btn-filled" style="width:100%;margin-top:16px;" onclick="handleLogin()">Iniciar Sesión</button>
-                    <button class="btn-text" style="width:100%;margin-top:8px;" onclick="showSubView('register')">Crear una cuenta</button>
-                </div>
-                <div id="register-form" style="display:none;">
-                    <div class="text-field"><input type="email" id="r-email" placeholder="Correo electrónico" autocomplete="email" aria-label="Correo electrónico"><label>Correo electrónico</label></div>
-                    <div class="text-field"><input type="password" id="r-pass" placeholder="Contraseña (mín 6 caracteres)" aria-label="Contraseña"><label>Contraseña</label></div>
-                    <div class="text-field"><input type="password" id="r-pass-confirm" placeholder="Confirmar contraseña" aria-label="Confirmar contraseña"><label>Confirmar contraseña</label></div>
-                    <button class="btn-filled" style="width:100%;margin-top:16px;" onclick="handleRegister()">Crear Cuenta</button>
-                    <button class="btn-text" style="width:100%;margin-top:8px;" onclick="showSubView('login')">Ya tengo una cuenta</button>
-                </div>
+                <header class="auth-header">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 8V6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9zm9 12H6V10h12v10zm-6-3c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/>
+                    </svg>
+                    <h1>Bienvenido</h1>
+                </header>
+                
+                <form id="login-form" onsubmit="event.preventDefault(); handleLogin();">
+                    <div class="text-field">
+                        <input 
+                            type="email" 
+                            id="l-email" 
+                            placeholder="Correo electrónico" 
+                            autocomplete="email" 
+                            aria-label="Correo electrónico"
+                            required
+                        />
+                        <label for="l-email">Correo electrónico</label>
+                    </div>
+                    <div class="text-field">
+                        <input 
+                            type="password" 
+                            id="l-pass" 
+                            placeholder="Contraseña" 
+                            autocomplete="current-password" 
+                            aria-label="Contraseña"
+                            required
+                        />
+                        <label for="l-pass">Contraseña</label>
+                    </div>
+                    <button type="submit" class="btn-filled" style="width:100%;margin-top:16px;">
+                        Iniciar Sesión
+                    </button>
+                    <button type="button" class="btn-text" style="width:100%;margin-top:8px;" onclick="showSubView('register')">
+                        Crear una cuenta
+                    </button>
+                </form>
+                
+                <form id="register-form" style="display:none;" onsubmit="event.preventDefault(); handleRegister();">
+                    <div class="text-field">
+                        <input 
+                            type="email" 
+                            id="r-email" 
+                            placeholder="Correo electrónico" 
+                            autocomplete="email" 
+                            aria-label="Correo electrónico"
+                            required
+                        />
+                        <label for="r-email">Correo electrónico</label>
+                    </div>
+                    <div class="text-field">
+                        <input 
+                            type="password" 
+                            id="r-pass" 
+                            placeholder="Contraseña (mín 6 caracteres)" 
+                            aria-label="Contraseña"
+                            minlength="6"
+                            required
+                        />
+                        <label for="r-pass">Contraseña</label>
+                    </div>
+                    <div class="text-field">
+                        <input 
+                            type="password" 
+                            id="r-pass-confirm" 
+                            placeholder="Confirmar contraseña" 
+                            aria-label="Confirmar contraseña"
+                            required
+                        />
+                        <label for="r-pass-confirm">Confirmar contraseña</label>
+                    </div>
+                    <button type="submit" class="btn-filled" style="width:100%;margin-top:16px;">
+                        Crear Cuenta
+                    </button>
+                    <button type="button" class="btn-text" style="width:100%;margin-top:8px;" onclick="showSubView('login')">
+                        Ya tengo una cuenta
+                    </button>
+                </form>
             </main>
         </div>
     </template>
@@ -107,19 +728,70 @@
     <template id="template-menu">
         <div id="menu-view" class="view">
             <header class="top-bar">
-                <span class="top-bar-title" id="page-title"></span>
-                <div id="status-chip" class="status-chip"><div class="status-dot"></div><span id="status-text">...</span></div>
+                <h2 class="top-bar-title" id="page-title">Productos</h2>
+                <div id="status-chip" class="status-chip" role="status" aria-live="polite">
+                    <div class="status-dot"></div>
+                    <span id="status-text">...</span>
+                </div>
             </header>
+            
             <main class="content">
-                <section id="products-page" class="page"></section>
-                <section id="store-page" class="page"></section>
-                <section id="settings-page" class="page"></section>
+                <section id="products-page" class="page" aria-label="Página de productos"></section>
+                <section id="store-page" class="page" aria-label="Página de tienda"></section>
+                <section id="settings-page" class="page" aria-label="Página de ajustes"></section>
             </main>
-            <button class="fab" id="fab" onclick="openProductModal()" aria-label="Agregar Producto"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></button>
-            <nav class="nav-bar">
-                <button class="nav-item" data-page="products-page" onclick="navigateTo('products-page', this)"><div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M20 2H4c-1 0-2 .9-2 2v3.01c0 .72.43 1.34 1 1.69V20c0 1.1 1.1 2 2 2h14c.9 0 2-.9 2-2V8.7c.57-.35 1-.97 1-1.69V4c0-1.1-1-2-2-2zm-5 12H9v-2h6v2zm5-7H4V4h16v3z"/></svg></div><span class="nav-label">Productos</span></button>
-                <button class="nav-item" data-page="store-page" onclick="navigateTo('store-page', this)"><div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M20 4H4v2h16V4zm1 10v-2l-1-5H4l-1 5v2h1v6h10v-6h4v6h2v-6h1zm-9 4H6v-4h6v4z"/></svg></div><span class="nav-label">Tienda</span></button>
-                <button class="nav-item" data-page="settings-page" onclick="navigateTo('settings-page', this)"><div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59-.24-1.13-.57-1.62-.94l-2.39-.96c-.22-.08-.47 0 .59-.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58c-.18-.14-.23-.41-.12-.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg></div><span class="nav-label">Ajustes</span></button>
+            
+            <button 
+                class="fab" 
+                id="fab" 
+                onclick="openProductModal()" 
+                aria-label="Agregar nuevo producto"
+            >
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                </svg>
+            </button>
+            
+            <nav class="nav-bar" aria-label="Navegación principal">
+                <button 
+                    class="nav-item" 
+                    data-page="products-page" 
+                    onclick="navigateTo('products-page', this)"
+                    aria-label="Productos"
+                >
+                    <div class="nav-icon">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M20 2H4c-1 0-2 .9-2 2v3.01c0 .72.43 1.34 1 1.69V20c0 1.1 1.1 2 2 2h14c.9 0 2-.9 2-2V8.7c.57-.35 1-.97 1-1.69V4c0-1.1-1-2-2-2zm-5 12H9v-2h6v2zm5-7H4V4h16v3z"/>
+                        </svg>
+                    </div>
+                    <span class="nav-label">Productos</span>
+                </button>
+                <button 
+                    class="nav-item" 
+                    data-page="store-page" 
+                    onclick="navigateTo('store-page', this)"
+                    aria-label="Tienda"
+                >
+                    <div class="nav-icon">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M20 4H4v2h16V4zm1 10v-2l-1-5H4l-1 5v2h1v6h10v-6h4v6h2v-6h1zm-9 4H6v-4h6v4z"/>
+                        </svg>
+                    </div>
+                    <span class="nav-label">Tienda</span>
+                </button>
+                <button 
+                    class="nav-item" 
+                    data-page="settings-page" 
+                    onclick="navigateTo('settings-page', this)"
+                    aria-label="Ajustes"
+                >
+                    <div class="nav-icon">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59-.24-1.13-.57-1.62-.94l-2.39-.96c-.22-.08-.47 0 .59-.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58c-.18-.14-.23-.41-.12-.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+                        </svg>
+                    </div>
+                    <span class="nav-label">Ajustes</span>
+                </button>
             </nav>
         </div>
     </template>
@@ -215,41 +887,676 @@
             });
         });
 
-        function showSubView(subViewId) { document.getElementById('login-form').style.display = subViewId === 'login' ? 'block' : 'none'; document.getElementById('register-form').style.display = subViewId === 'register' ? 'block' : 'none'; }
-        async function handleLogin() { const e=document.getElementById('l-email').value.trim(),p=document.getElementById('l-pass').value; if(!e||!p)return showToast('Completa los campos'); const{error}=await supabase.auth.signInWithPassword({email:e,password:p}); if(error)showToast(`Error: ${error.message}`); }
-        async function handleRegister() { const e=document.getElementById('r-email').value.trim(),p=document.getElementById('r-pass').value,c=document.getElementById('r-pass-confirm').value; if(!e||!p)return showToast('Completa campos'); if(p.length<6)return showToast('Contraseña muy corta'); if(p!==c)return showToast('Las contraseñas no coinciden'); const{data,error}=await supabase.auth.signUp({email:e,password:p}); if(error)showToast(`Error: ${error.message}`); else{showToast('¡Cuenta creada! Revisa tu correo para confirmar.'); showSubView('login');} }
-        async function handleLogout() { try { await supabase.auth.signOut(); } finally { localStorage.removeItem('session_token'); localStorage.removeItem('user_id'); } }
+        /**
+         * Toggle between login and register sub-views
+         */
+        function showSubView(subViewId) {
+            const loginForm = document.getElementById('login-form');
+            const registerForm = document.getElementById('register-form');
+            
+            if (subViewId === 'login') {
+                loginForm.style.display = 'block';
+                registerForm.style.display = 'none';
+            } else {
+                loginForm.style.display = 'none';
+                registerForm.style.display = 'block';
+            }
+        }
+        
+        /**
+         * Handle login form submission
+         */
+        async function handleLogin() {
+            const email = document.getElementById('l-email').value.trim();
+            const password = document.getElementById('l-pass').value;
+            
+            if (!email || !password) {
+                return showToast('Completa los campos');
+            }
+            
+            const { error } = await supabase.auth.signInWithPassword({
+                email: email,
+                password: password
+            });
+            
+            if (error) {
+                showToast(`Error: ${error.message}`);
+            }
+        }
+        
+        /**
+         * Handle registration form submission
+         */
+        async function handleRegister() {
+            const email = document.getElementById('r-email').value.trim();
+            const password = document.getElementById('r-pass').value;
+            const confirmPassword = document.getElementById('r-pass-confirm').value;
+            
+            if (!email || !password) {
+                return showToast('Completa campos');
+            }
+            
+            if (password.length < 6) {
+                return showToast('Contraseña muy corta');
+            }
+            
+            if (password !== confirmPassword) {
+                return showToast('Las contraseñas no coinciden');
+            }
+            
+            const { data, error } = await supabase.auth.signUp({
+                email: email,
+                password: password
+            });
+            
+            if (error) {
+                showToast(`Error: ${error.message}`);
+            } else {
+                showToast('¡Cuenta creada! Revisa tu correo para confirmar.');
+                showSubView('login');
+            }
+        }
+        
+        /**
+         * Handle user logout
+         */
+        async function handleLogout() {
+            try {
+                await supabase.auth.signOut();
+            } finally {
+                localStorage.removeItem('session_token');
+                localStorage.removeItem('user_id');
+            }
+        }
 
-        function initializeMenu() { loadCache(); renderAllUI(); refreshData(); startNetworkMonitor(); navigateTo('products-page', document.querySelector('.nav-item[data-page="products-page"]')); }
-        function loadCache() { const s=localStorage.getItem('store_cache');if(s)STORE=JSON.parse(s); const p=localStorage.getItem('products_cache');if(p)PRODUCTS=JSON.parse(p); }
-        async function refreshData() { if(!USER_ID)return; const {data:s}=await supabase.from('store_requests').select('*').eq('user_id',USER_ID).maybeSingle(); STORE=s; localStorage.setItem('store_cache',JSON.stringify(s)); if(STORE?.status==='approved'){const{data:p}=await supabase.from('products').select('*').eq('store_id',STORE.id).order('name',{ascending:true}); PRODUCTS=p||[]}else{PRODUCTS=[]} localStorage.setItem('products_cache',JSON.stringify(PRODUCTS)); renderAllUI(); }
+        /**
+         * Initialize the main menu view
+         */
+        function initializeMenu() {
+            loadCache();
+            renderAllUI();
+            refreshData();
+            startNetworkMonitor();
+            navigateTo('products-page', document.querySelector('.nav-item[data-page="products-page"]'));
+        }
         
-        function renderAllUI() { renderStore(); renderProducts(); renderSettings(); }
-        function renderStore(){const d=document.getElementById('store-page');if(!d)return;if(!STORE){d.innerHTML=renderEmptyState('storefront','Sin Tienda','Crea tu perfil para vender.','Crear Tienda','openStoreModal()')}else if(STORE.status==='approved'){d.innerHTML=`<div class="card" style="position:relative;"><button class="icon-btn" onclick="openStoreModal(STORE)" style="position:absolute;top:12px;right:12px;"><svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button><h2 style="font-size:20px;color:var(--md-sys-color-primary);padding-right:40px;">${STORE.business_name}</h2><p style="color:var(--md-sys-color-on-surface-variant);font-size:14px;margin-top:4px;">${STORE.business_type||'Negocio'}</p><div style="margin-top:16px;font-size:14px;color:var(--md-sys-color-on-surface-variant);display:flex;flex-direction:column;gap:8px;"><div>📞 ${STORE.phone}</div><div>✉️ ${STORE.email}</div><div>📍 ${STORE.address||'Sin dirección'}</div></div></div>`}else{d.innerHTML=renderEmptyState(STORE.status==='rejected'?'error':'pending',STORE.status==='rejected'?'Rechazada':'En Revisión',STORE.rejection_reason||'Tu solicitud se está procesando.','Actualizar','refreshData()',true)}}
-        function renderProducts(){const l=document.getElementById('products-page');if(!l)return;if(!STORE||STORE.status!=='approved'){l.innerHTML=renderEmptyState('lock','Tienda No Aprobada','Necesitas una tienda activa para agregar productos.','Ir a Tienda',"navigateTo('store-page',document.querySelector('[data-page=store-page]'))",true)}else if(PRODUCTS.length===0){l.innerHTML=renderEmptyState('inventory_2','Sin Productos','Usa el botón <b>+</b> para agregar tu primer producto.')}else{l.innerHTML=PRODUCTS.map(p=>`<div class="card card-product"><div style="flex:1;"><div class="name">${p.name}</div><div class="category">${p.category||'General'}</div></div><div class="card-actions"><div class="price">$${p.price}</div><button class="icon-btn" onclick='showProductMenu(${JSON.stringify(p)})'><svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2 2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2 2z"/></svg></button></div></div>`).join('')}}
-        function renderSettings(){const s=document.getElementById('settings-page');if(s)s.innerHTML=`<div class="card" onclick="handleLogout()" style="cursor:pointer;"><div style="display:flex;align-items:center;gap:16px;"><div style="width:40px;height:40px;background:var(--md-sys-color-error-container);border-radius:50%;display:flex;align-items:center;justify-content:center;"><svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:var(--md-sys-color-error);"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg></div><div style="color:var(--md-sys-color-error);font-weight:500;">Cerrar Sesión</div></div></div>`}
-        function renderEmptyState(i,t,s,b,a,o){const icons={storefront:'<svg viewBox="0 0 24 24"><path d="M20 4H4v2h16V4zm1 10v-2l-1-5H4l-1 5v2h1v6h10v-6h4v6h2v-6h1zm-9 4H6v-4h6v4z"/></svg>',inventory_2:'<svg viewBox="0 0 24 24"><path d="M20 2H4c-1 0-2 .9-2 2v3.01c0 .72.43 1.34 1 1.69V20c0 1.1 1.1 2 2 2h14c.9 0 2-.9 2-2V8.7c.57-.35 1-.97 1-1.69V4c0-1.1-1-2-2-2zm-5 12H9v-2h6v2zm5-7H4V4h16v3z"/></svg>',lock:'<svg viewBox="0 0 24 24"><path d="M12 2C9.24 2 7 4.24 7 7v3H6c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-8c0-1.1-.9-2-2-2h-1V7c0-2.76-2.24-5-5-5zm0 2c1.66 0 3 1.34 3 3v3H9V7c0-1.66 1.34-3 3-3z"/></svg>',pending:'<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>',error:'<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>'};const btn=b?`<button class="${o?'btn-tonal':'btn-filled'}" onclick="${a}" style="margin-top:16px;">${b}</button>`:'';return`<div class="empty-state">${icons[i]}<h3>${t}</h3><p>${s}</p>${btn}</div>`}
+        /**
+         * Load cached data from localStorage
+         */
+        function loadCache() {
+            const storeCache = localStorage.getItem('store_cache');
+            if (storeCache) {
+                STORE = JSON.parse(storeCache);
+            }
+            
+            const productsCache = localStorage.getItem('products_cache');
+            if (productsCache) {
+                PRODUCTS = JSON.parse(productsCache);
+            }
+        }
         
-        function navigateTo(pageId,btn){document.querySelectorAll('.page').forEach(p=>{p.classList.remove('active');p.style.display='none';});const page=document.getElementById(pageId);if(page){page.classList.add('active');page.style.display='block';}document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));if(btn)btn.classList.add('active');const title={'products-page':'Productos','store-page':'Mi Tienda','settings-page':'Ajustes'}[pageId];const titleEl=document.getElementById('page-title');if(titleEl)titleEl.textContent=title;updateFabVisibility()}
-        function updateFabVisibility(){const f=document.getElementById('fab');if(!f)return;const p=document.getElementById('products-page')?.classList.contains('active');f.style.display=(p&&STORE?.status==='approved')?'flex':'none'}
+        /**
+         * Refresh data from Supabase and update cache
+         */
+        async function refreshData() {
+            if (!USER_ID) {
+                return;
+            }
+            
+            // Fetch store request
+            const { data: storeData } = await supabase
+                .from('store_requests')
+                .select('*')
+                .eq('user_id', USER_ID)
+                .maybeSingle();
+            
+            STORE = storeData;
+            localStorage.setItem('store_cache', JSON.stringify(storeData));
+            
+            // Fetch products if store is approved
+            if (STORE?.status === 'approved') {
+                const { data: productsData } = await supabase
+                    .from('products')
+                    .select('*')
+                    .eq('store_id', STORE.id)
+                    .order('name', { ascending: true });
+                
+                PRODUCTS = productsData || [];
+            } else {
+                PRODUCTS = [];
+            }
+            
+            localStorage.setItem('products_cache', JSON.stringify(PRODUCTS));
+            renderAllUI();
+        }
         
-        function openModal(html){const e=document.getElementById('modal-overlay');e.innerHTML=`<div class="modal" onclick="event.stopPropagation()">${html}</div>`;e.classList.add('active');}
-        function closeModal(){const e=document.getElementById('modal-overlay');e.classList.remove('active')}
-        function openBottomSheet(html){const o=document.getElementById('bottom-sheet-menu');o.innerHTML=`<div class="bottom-sheet-content" onclick="event.stopPropagation()">${html}</div>`;o.classList.add('active')}
-        function closeBottomSheet(){const o=document.getElementById('bottom-sheet-menu');o.classList.remove('active')}
+        /**
+         * Render all UI sections
+         */
+        function renderAllUI() {
+            renderStore();
+            renderProducts();
+            renderSettings();
+        }
         
-        function openStoreModal(s=null){const t=s?'Editar':'Crear';openModal(`<div class="modal-title">${t} Tienda</div><div class="text-field"><input id="st-name" value="${s?.business_name||''}" placeholder="Nombre del Negocio" aria-label="Nombre del Negocio"><label>Nombre del Negocio</label></div><div class="text-field"><input id="st-type" value="${s?.business_type||''}" placeholder="Tipo (ej: Restaurante)" aria-label="Tipo de Negocio"><label>Tipo de Negocio</label></div><div class="text-field"><input id="st-phone" value="${s?.phone||''}" placeholder="Teléfono" aria-label="Teléfono"><label>Teléfono</label></div><div class="text-field"><input id="st-email" value="${s?.email||''}" placeholder="Email" aria-label="Email"><label>Email</label></div><div class="text-field"><input id="st-address" value="${s?.address||''}" placeholder="Dirección" aria-label="Dirección"><label>Dirección</label></div><div class="modal-actions"><button class="btn-text" onclick="closeModal()">Cancelar</button><button class="btn-filled" onclick="submitStore()">Guardar</button></div>`)}
-        async function submitStore(){const e=document.getElementById('st-name').value.trim(),t=document.getElementById('st-phone').value.trim(),n=document.getElementById('st-email').value.trim();if(!e||!t||!n)return showToast('Nombre, teléfono y email requeridos');const d={user_id:USER_ID,business_name:e,business_type:document.getElementById('st-type').value.trim(),phone:t,email:n,address:document.getElementById('st-address').value.trim(),status:STORE?.status||'pending'};const i=STORE?await supabase.from('store_requests').update(d).eq('user_id',USER_ID):await supabase.from('store_requests').insert([d]);if(i.error)showToast(`Error: ${i.error.message}`);else{closeModal();showToast(STORE?'Tienda actualizada':'Solicitud enviada');await refreshData()}}
+        /**
+         * Render the store page
+         */
+        function renderStore() {
+            const storePage = document.getElementById('store-page');
+            if (!storePage) {
+                return;
+            }
+            
+            if (!STORE) {
+                // No store request yet
+                storePage.innerHTML = renderEmptyState(
+                    'storefront',
+                    'Sin Tienda',
+                    'Crea tu perfil para vender.',
+                    'Crear Tienda',
+                    'openStoreModal()'
+                );
+            } else if (STORE.status === 'approved') {
+                // Store is approved - show details
+                storePage.innerHTML = `
+                    <div class="card" style="position:relative;">
+                        <button 
+                            class="icon-btn" 
+                            onclick="openStoreModal(STORE)" 
+                            style="position:absolute;top:12px;right:12px;"
+                            aria-label="Editar tienda"
+                        >
+                            <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24" aria-hidden="true">
+                                <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                            </svg>
+                        </button>
+                        <h2 style="font-size:20px;color:var(--md-sys-color-primary);padding-right:40px;">
+                            ${STORE.business_name}
+                        </h2>
+                        <p style="color:var(--md-sys-color-on-surface-variant);font-size:14px;margin-top:4px;">
+                            ${STORE.business_type || 'Negocio'}
+                        </p>
+                        <div style="margin-top:16px;font-size:14px;color:var(--md-sys-color-on-surface-variant);display:flex;flex-direction:column;gap:8px;">
+                            <div>📞 ${STORE.phone}</div>
+                            <div>✉️ ${STORE.email}</div>
+                            <div>📍 ${STORE.address || 'Sin dirección'}</div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                // Store is pending or rejected
+                const isRejected = STORE.status === 'rejected';
+                storePage.innerHTML = renderEmptyState(
+                    isRejected ? 'error' : 'pending',
+                    isRejected ? 'Rechazada' : 'En Revisión',
+                    STORE.rejection_reason || 'Tu solicitud se está procesando.',
+                    'Actualizar',
+                    'refreshData()',
+                    true
+                );
+            }
+        }
+
+        /**
+         * Render the products page
+         */
+        function renderProducts() {
+            const productsPage = document.getElementById('products-page');
+            if (!productsPage) {
+                return;
+            }
+            
+            if (!STORE || STORE.status !== 'approved') {
+                productsPage.innerHTML = renderEmptyState(
+                    'lock',
+                    'Tienda No Aprobada',
+                    'Necesitas una tienda activa para agregar productos.',
+                    'Ir a Tienda',
+                    "navigateTo('store-page',document.querySelector('[data-page=store-page]'))",
+                    true
+                );
+            } else if (PRODUCTS.length === 0) {
+                productsPage.innerHTML = renderEmptyState(
+                    'inventory_2',
+                    'Sin Productos',
+                    'Usa el botón <b>+</b> para agregar tu primer producto.'
+                );
+            } else {
+                productsPage.innerHTML = PRODUCTS.map(product => `
+                    <div class="card card-product">
+                        <div style="flex:1;">
+                            <div class="name">${product.name}</div>
+                            <div class="category">${product.category || 'General'}</div>
+                        </div>
+                        <div class="card-actions">
+                            <div class="price">$${product.price}</div>
+                            <button 
+                                class="icon-btn" 
+                                onclick='showProductMenu(${JSON.stringify(product)})'
+                                aria-label="Opciones del producto ${product.name}"
+                            >
+                                <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24" aria-hidden="true">
+                                    <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
         
-        function openProductModal(p=null){if(p)closeBottomSheet();const t=p?'Editar':'Nuevo';openModal(`<div class="modal-title">${t} Producto</div><div class="text-field"><input id="p-name" placeholder="Nombre" value="${p?.name||''}" aria-label="Nombre del Producto"><label>Nombre del Producto</label></div><div class="text-field"><input id="p-price" type="number" placeholder="Precio" value="${p?.price||''}" aria-label="Precio"><label>Precio</label></div><div class="text-field"><input id="p-cat" placeholder="Categoría" value="${p?.category||''}" aria-label="Categoría"><label>Categoría</label></div><div class="modal-actions"><button class="btn-text" onclick="closeModal()">Cancelar</button><button class="btn-filled" onclick="submitProduct(${p?.id||null})">Guardar</button></div>`)}
-        async function submitProduct(id=null){const n=document.getElementById('p-name').value.trim(),p=document.getElementById('p-price').value;if(!n||!p)return showToast('Nombre y precio requeridos');const d={store_id:STORE.id,name:n,price:parseFloat(p),category:document.getElementById('p-cat').value.trim()};const{error}=id?await supabase.from('products').update(d).eq('id',id):await supabase.from('products').insert([d]);if(error)showToast(`Error: ${error.message}`);else{closeModal();showToast('Producto guardado');await refreshData()}}
+        /**
+         * Render the settings page
+         */
+        function renderSettings() {
+            const settingsPage = document.getElementById('settings-page');
+            if (!settingsPage) {
+                return;
+            }
+            
+            settingsPage.innerHTML = `
+                <div class="card" onclick="handleLogout()" style="cursor:pointer;">
+                    <div style="display:flex;align-items:center;gap:16px;">
+                        <div style="width:40px;height:40px;background:var(--md-sys-color-error-container);border-radius:50%;display:flex;align-items:center;justify-content:center;">
+                            <svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:var(--md-sys-color-error);" aria-hidden="true">
+                                <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
+                            </svg>
+                        </div>
+                        <div style="color:var(--md-sys-color-error);font-weight:500;">
+                            Cerrar Sesión
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        /**
+         * Render empty state component
+         */
+        function renderEmptyState(iconType, title, subtitle, buttonText, buttonAction, isSecondaryButton) {
+            const icons = {
+                storefront: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 4H4v2h16V4zm1 10v-2l-1-5H4l-1 5v2h1v6h10v-6h4v6h2v-6h1zm-9 4H6v-4h6v4z"/></svg>',
+                inventory_2: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 2H4c-1 0-2 .9-2 2v3.01c0 .72.43 1.34 1 1.69V20c0 1.1 1.1 2 2 2h14c.9 0 2-.9 2-2V8.7c.57-.35 1-.97 1-1.69V4c0-1.1-1-2-2-2zm-5 12H9v-2h6v2zm5-7H4V4h16v3z"/></svg>',
+                lock: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C9.24 2 7 4.24 7 7v3H6c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-8c0-1.1-.9-2-2-2h-1V7c0-2.76-2.24-5-5-5zm0 2c1.66 0 3 1.34 3 3v3H9V7c0-1.66 1.34-3 3-3z"/></svg>',
+                pending: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>',
+                error: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>'
+            };
+            
+            const buttonHtml = buttonText 
+                ? `<button class="${isSecondaryButton ? 'btn-tonal' : 'btn-filled'}" onclick="${buttonAction}" style="margin-top:16px;">${buttonText}</button>` 
+                : '';
+            
+            return `
+                <div class="empty-state">
+                    ${icons[iconType]}
+                    <h3>${title}</h3>
+                    <p>${subtitle}</p>
+                    ${buttonHtml}
+                </div>
+            `;
+        }
         
-        function showProductMenu(p){const s=JSON.stringify(p);openBottomSheet(`<div class="bottom-sheet-title">${p.name}</div><button class="bottom-sheet-item" onclick='openProductModal(${s})'><svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>Editar</button><button class="bottom-sheet-item" onclick="deleteProduct(${p.id})"><svg viewBox="0 0 24 24" style="fill:var(--md-sys-color-error)"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg><span style="color:var(--md-sys-color-error)">Eliminar</span></button>`)}
-        async function deleteProduct(id){if(!confirm('¿Seguro que quieres eliminar este producto?'))return;closeBottomSheet();const{error}=await supabase.from('products').delete().eq('id',id);if(error)showToast(`Error: ${error.message}`);else{showToast('Producto eliminado');await refreshData()}}
+        /**
+         * Navigate to a different page within the app
+         */
+        function navigateTo(pageId, navButton) {
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+                page.style.display = 'none';
+            });
+            
+            // Show selected page
+            const selectedPage = document.getElementById(pageId);
+            if (selectedPage) {
+                selectedPage.classList.add('active');
+                selectedPage.style.display = 'block';
+            }
+            
+            // Update navigation buttons
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            if (navButton) {
+                navButton.classList.add('active');
+            }
+            
+            // Update page title
+            const titles = {
+                'products-page': 'Productos',
+                'store-page': 'Mi Tienda',
+                'settings-page': 'Ajustes'
+            };
+            
+            const titleElement = document.getElementById('page-title');
+            if (titleElement) {
+                titleElement.textContent = titles[pageId];
+            }
+            
+            updateFabVisibility();
+        }
         
-        function startNetworkMonitor(){if(networkMonitorInterval)clearInterval(networkMonitorInterval);checkConnection();networkMonitorInterval=setInterval(checkConnection,15000)}
-        async function checkConnection(){const c=document.getElementById('status-chip'),t=document.getElementById('status-text');if(!c||!t)return;c.className='status-chip checking';t.textContent='Verificando';try{const o=new AbortController(),i=setTimeout(()=>o.abort(),4000);await fetch(SUPABASE_URL,{signal:o.signal,method:'HEAD',mode:'no-cors'});clearTimeout(i);c.className='status-chip online';t.textContent='Conectado'}catch(e){c.className='status-chip offline';t.textContent='Desconectado'}}
-        function showToast(msg){if(typeof Android!=='undefined'&&Android.showToast)Android.showToast(msg);else alert(msg)}
+        /**
+         * Update FAB visibility based on current page
+         */
+        function updateFabVisibility() {
+            const fab = document.getElementById('fab');
+            if (!fab) {
+                return;
+            }
+            
+            const isProductsPage = document.getElementById('products-page')?.classList.contains('active');
+            fab.style.display = (isProductsPage && STORE?.status === 'approved') ? 'flex' : 'none';
+        }
+        
+        /**
+         * Open modal dialog
+         */
+        function openModal(html) {
+            const overlay = document.getElementById('modal-overlay');
+            overlay.innerHTML = `<div class="modal" onclick="event.stopPropagation()">${html}</div>`;
+            overlay.classList.add('active');
+        }
+        
+        /**
+         * Close modal dialog
+         */
+        function closeModal() {
+            const overlay = document.getElementById('modal-overlay');
+            overlay.classList.remove('active');
+        }
+        
+        /**
+         * Open bottom sheet menu
+         */
+        function openBottomSheet(html) {
+            const overlay = document.getElementById('bottom-sheet-menu');
+            overlay.innerHTML = `<div class="bottom-sheet-content" onclick="event.stopPropagation()">${html}</div>`;
+            overlay.classList.add('active');
+        }
+        
+        /**
+         * Close bottom sheet menu
+         */
+        function closeBottomSheet() {
+            const overlay = document.getElementById('bottom-sheet-menu');
+            overlay.classList.remove('active');
+        }
+        
+        /**
+         * Open store modal for creating/editing store
+         */
+        function openStoreModal(storeData = null) {
+            const title = storeData ? 'Editar' : 'Crear';
+            
+            openModal(`
+                <div class="modal-title">${title} Tienda</div>
+                <div class="text-field">
+                    <input 
+                        id="st-name" 
+                        value="${storeData?.business_name || ''}" 
+                        placeholder="Nombre del Negocio" 
+                        aria-label="Nombre del Negocio"
+                    />
+                    <label for="st-name">Nombre del Negocio</label>
+                </div>
+                <div class="text-field">
+                    <input 
+                        id="st-type" 
+                        value="${storeData?.business_type || ''}" 
+                        placeholder="Tipo (ej: Restaurante)" 
+                        aria-label="Tipo de Negocio"
+                    />
+                    <label for="st-type">Tipo de Negocio</label>
+                </div>
+                <div class="text-field">
+                    <input 
+                        id="st-phone" 
+                        value="${storeData?.phone || ''}" 
+                        placeholder="Teléfono" 
+                        aria-label="Teléfono"
+                    />
+                    <label for="st-phone">Teléfono</label>
+                </div>
+                <div class="text-field">
+                    <input 
+                        id="st-email" 
+                        value="${storeData?.email || ''}" 
+                        placeholder="Email" 
+                        aria-label="Email"
+                    />
+                    <label for="st-email">Email</label>
+                </div>
+                <div class="text-field">
+                    <input 
+                        id="st-address" 
+                        value="${storeData?.address || ''}" 
+                        placeholder="Dirección" 
+                        aria-label="Dirección"
+                    />
+                    <label for="st-address">Dirección</label>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-text" onclick="closeModal()">Cancelar</button>
+                    <button class="btn-filled" onclick="submitStore()">Guardar</button>
+                </div>
+            `);
+        }
+        
+        /**
+         * Submit store form
+         */
+        async function submitStore() {
+            const businessName = document.getElementById('st-name').value.trim();
+            const phone = document.getElementById('st-phone').value.trim();
+            const email = document.getElementById('st-email').value.trim();
+            
+            if (!businessName || !phone || !email) {
+                return showToast('Nombre, teléfono y email requeridos');
+            }
+            
+            const storeData = {
+                user_id: USER_ID,
+                business_name: businessName,
+                business_type: document.getElementById('st-type').value.trim(),
+                phone: phone,
+                email: email,
+                address: document.getElementById('st-address').value.trim(),
+                status: STORE?.status || 'pending'
+            };
+            
+            const result = STORE
+                ? await supabase.from('store_requests').update(storeData).eq('user_id', USER_ID)
+                : await supabase.from('store_requests').insert([storeData]);
+            
+            if (result.error) {
+                showToast(`Error: ${result.error.message}`);
+            } else {
+                closeModal();
+                showToast(STORE ? 'Tienda actualizada' : 'Solicitud enviada');
+                await refreshData();
+            }
+        }
+        
+        /**
+         * Open product modal for creating/editing product
+         */
+        function openProductModal(productData = null) {
+            if (productData) {
+                closeBottomSheet();
+            }
+            
+            const title = productData ? 'Editar' : 'Nuevo';
+            
+            openModal(`
+                <div class="modal-title">${title} Producto</div>
+                <div class="text-field">
+                    <input 
+                        id="p-name" 
+                        placeholder="Nombre" 
+                        value="${productData?.name || ''}" 
+                        aria-label="Nombre del Producto"
+                    />
+                    <label for="p-name">Nombre del Producto</label>
+                </div>
+                <div class="text-field">
+                    <input 
+                        id="p-price" 
+                        type="number" 
+                        placeholder="Precio" 
+                        value="${productData?.price || ''}" 
+                        aria-label="Precio"
+                    />
+                    <label for="p-price">Precio</label>
+                </div>
+                <div class="text-field">
+                    <input 
+                        id="p-cat" 
+                        placeholder="Categoría" 
+                        value="${productData?.category || ''}" 
+                        aria-label="Categoría"
+                    />
+                    <label for="p-cat">Categoría</label>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-text" onclick="closeModal()">Cancelar</button>
+                    <button class="btn-filled" onclick="submitProduct(${productData?.id || null})">Guardar</button>
+                </div>
+            `);
+        }
+        
+        /**
+         * Submit product form
+         */
+        async function submitProduct(productId = null) {
+            const name = document.getElementById('p-name').value.trim();
+            const price = document.getElementById('p-price').value;
+            
+            if (!name || !price) {
+                return showToast('Nombre y precio requeridos');
+            }
+            
+            const productData = {
+                store_id: STORE.id,
+                name: name,
+                price: parseFloat(price),
+                category: document.getElementById('p-cat').value.trim()
+            };
+            
+            const { error } = productId
+                ? await supabase.from('products').update(productData).eq('id', productId)
+                : await supabase.from('products').insert([productData]);
+            
+            if (error) {
+                showToast(`Error: ${error.message}`);
+            } else {
+                closeModal();
+                showToast('Producto guardado');
+                await refreshData();
+            }
+        }
+        
+        /**
+         * Show product options menu (bottom sheet)
+         */
+        function showProductMenu(product) {
+            const productJson = JSON.stringify(product);
+            
+            openBottomSheet(`
+                <div class="bottom-sheet-title">${product.name}</div>
+                <button class="bottom-sheet-item" onclick='openProductModal(${productJson})'>
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                    </svg>
+                    Editar
+                </button>
+                <button class="bottom-sheet-item" onclick="deleteProduct(${product.id})">
+                    <svg viewBox="0 0 24 24" style="fill:var(--md-sys-color-error)" aria-hidden="true">
+                        <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                    </svg>
+                    <span style="color:var(--md-sys-color-error)">Eliminar</span>
+                </button>
+            `);
+        }
+        
+        /**
+         * Delete product
+         */
+        async function deleteProduct(productId) {
+            if (!confirm('¿Seguro que quieres eliminar este producto?')) {
+                return;
+            }
+            
+            closeBottomSheet();
+            
+            const { error } = await supabase.from('products').delete().eq('id', productId);
+            
+            if (error) {
+                showToast(`Error: ${error.message}`);
+            } else {
+                showToast('Producto eliminado');
+                await refreshData();
+            }
+        }
+        
+        /**
+         * Start network connection monitor
+         */
+        function startNetworkMonitor() {
+            if (networkMonitorInterval) {
+                clearInterval(networkMonitorInterval);
+            }
+            
+            checkConnection();
+            networkMonitorInterval = setInterval(checkConnection, 15000);
+        }
+        
+        /**
+         * Check network connection status
+         */
+        async function checkConnection() {
+            const statusChip = document.getElementById('status-chip');
+            const statusText = document.getElementById('status-text');
+            
+            if (!statusChip || !statusText) {
+                return;
+            }
+            
+            statusChip.className = 'status-chip checking';
+            statusText.textContent = 'Verificando';
+            
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 4000);
+                
+                await fetch(SUPABASE_URL, {
+                    signal: controller.signal,
+                    method: 'HEAD',
+                    mode: 'no-cors'
+                });
+                
+                clearTimeout(timeoutId);
+                statusChip.className = 'status-chip online';
+                statusText.textContent = 'Conectado';
+            } catch (error) {
+                statusChip.className = 'status-chip offline';
+                statusText.textContent = 'Desconectado';
+            }
+        }
+        
+        /**
+         * Show toast message
+         */
+        function showToast(message) {
+            // Check if Android interface is available (WebView)
+            if (typeof Android !== 'undefined' && Android.showToast) {
+                Android.showToast(message);
+            } else {
+                // Fallback to alert for web browsers
+                alert(message);
+            }
+        }
     </script>
 </body>
 </html>
