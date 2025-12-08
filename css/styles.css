@@ -242,6 +242,21 @@ body {
     /* M3 Label Large */
 }
 
+.btn-tonal {
+    height: 40px;
+    padding: 0 var(--spacing-6);
+    background: var(--md-sys-color-secondary-container);
+    color: var(--md-sys-color-on-secondary-container);
+    border: none;
+    border-radius: var(--spacing-5);
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 20px;
+    cursor: pointer;
+    /* M3 Tonal Button - for secondary actions with more emphasis than text buttons */
+    /* M3 Label Large */
+}
+
 /* Top bar */
 .top-bar {
     height: 56px;
