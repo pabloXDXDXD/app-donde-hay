@@ -985,12 +985,12 @@
          */
         function loadCache() {
             const storeCache = localStorage.getItem('store_cache');
-            if (storeCache) {
+            if (storeCache && storeCache !== 'null') {
                 STORE = JSON.parse(storeCache);
             }
             
             const productsCache = localStorage.getItem('products_cache');
-            if (productsCache) {
+            if (productsCache && productsCache !== 'null') {
                 PRODUCTS = JSON.parse(productsCache);
             }
         }
@@ -1133,7 +1133,7 @@
                             <div class="price">$${product.price}</div>
                             <button 
                                 class="icon-btn" 
-                                onclick='showProductMenu(${JSON.stringify(product)})'
+                                onclick="showProductMenu(${product.id})"
                                 aria-label="Opciones del producto ${product.name}"
                             >
                                 <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24" aria-hidden="true">
@@ -1411,13 +1411,16 @@
         /**
          * Open product modal for creating/editing product
          */
-        function openProductModal(productData = null) {
-            if (productData) {
+        function openProductModal(productId = null) {
+            // Close bottom sheet if coming from edit action
+            if (productId) {
                 closeBottomSheet();
             }
             
+            // Find product data if editing
+            const productData = productId ? PRODUCTS.find(p => p.id === productId) : null;
+            
             const title = productData ? 'Editar' : 'Nuevo';
-            const productId = productData ? productData.id : null;
             
             openModal(`
                 <div class="modal-title">${title} Producto</div>
@@ -1502,12 +1505,16 @@
         /**
          * Show product options menu (bottom sheet)
          */
-        function showProductMenu(product) {
-            const productJson = JSON.stringify(product);
+        function showProductMenu(productId) {
+            const product = PRODUCTS.find(p => p.id === productId);
+            if (!product) {
+                showToast('Producto no encontrado');
+                return;
+            }
             
             openBottomSheet(`
                 <div class="bottom-sheet-title">${product.name}</div>
-                <button class="bottom-sheet-item" onclick='openProductModal(${productJson})'>
+                <button class="bottom-sheet-item" onclick="openProductModal(${productId})">
                     <svg viewBox="0 0 24 24" aria-hidden="true">
                         <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
                     </svg>
@@ -1531,6 +1538,12 @@
             }
             
             closeBottomSheet();
+            
+            // Verify ownership through store
+            if (!STORE || STORE.user_id !== USER_ID) {
+                showToast('Error: No tienes permiso para eliminar este producto');
+                return;
+            }
             
             const { error } = await supabase.from('products').delete().eq('id', productId);
             
