@@ -30,12 +30,29 @@
                 from: function(table) {
                     return {
                         select: function(columns) {
+                            this._table = table;
                             return this;
                         },
                         eq: function(column, value) {
                             return this;
                         },
                         maybeSingle: async function() {
+                            // Return mock store data for testing
+                            if (this._table === 'store_requests') {
+                                return { 
+                                    data: {
+                                        id: 1,
+                                        user_id: 'mock_user_id',
+                                        business_name: 'Mi Tienda de Prueba',
+                                        business_type: 'Restaurante',
+                                        phone: '555-1234',
+                                        email: 'test@example.com',
+                                        address: 'Calle Principal 123',
+                                        status: 'approved'
+                                    }, 
+                                    error: null 
+                                };
+                            }
                             return { data: null, error: null };
                         },
                         order: function(column, options) {
