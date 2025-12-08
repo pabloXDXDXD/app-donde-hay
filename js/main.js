@@ -282,13 +282,13 @@ function renderStore() {
                         <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
                     </svg>
                 </button>
-                <h2 style="font-size:20px;color:var(--md-sys-color-primary);padding-right:40px;">
+                <h2 class="md-typescale-title-medium" style="color:var(--md-sys-color-primary);padding-right:40px;">
                     ${STORE.business_name}
                 </h2>
-                <p style="color:var(--md-sys-color-on-surface-variant);font-size:14px;margin-top:4px;">
+                <p class="md-typescale-body-medium" style="color:var(--md-sys-color-on-surface-variant);margin-top:4px;">
                     ${STORE.business_type || 'Negocio'}
                 </p>
-                <div style="margin-top:16px;font-size:14px;color:var(--md-sys-color-on-surface-variant);display:flex;flex-direction:column;gap:8px;">
+                <div class="md-typescale-body-medium" style="margin-top:16px;color:var(--md-sys-color-on-surface-variant);display:flex;flex-direction:column;gap:8px;">
                     <div>📞 ${STORE.phone}</div>
                     <div>✉️ ${STORE.email}</div>
                     <div>📍 ${STORE.address || 'Sin dirección'}</div>
@@ -337,11 +337,11 @@ function renderProducts() {
         productsPage.innerHTML = PRODUCTS.map(product => `
             <div class="card card-product">
                 <div style="flex:1;">
-                    <div class="name">${product.name}</div>
-                    <div class="category">${product.category || 'General'}</div>
+                    <div class="name md-typescale-body-large">${product.name}</div>
+                    <div class="category md-typescale-body-small">${product.category || 'General'}</div>
                 </div>
                 <div class="card-actions">
-                    <div class="price">$${product.price}</div>
+                    <div class="price">${'$' + product.price}</div>
                     <button 
                         class="icon-btn" 
                         onclick="showProductMenu(${product.id})"
@@ -375,7 +375,7 @@ function renderSettings() {
                         <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
                     </svg>
                 </div>
-                <div style="color:var(--md-sys-color-error);font-weight:500;">
+                <div class="md-typescale-body-large" style="color:var(--md-sys-color-error);font-weight:500;">
                     Eliminar Tienda
                 </div>
             </div>
@@ -391,7 +391,7 @@ function renderSettings() {
                         <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
                     </svg>
                 </div>
-                <div style="color:var(--md-sys-color-error);font-weight:500;">
+                <div class="md-typescale-body-large" style="color:var(--md-sys-color-error);font-weight:500;">
                     Cerrar Sesión
                 </div>
             </div>
@@ -418,8 +418,8 @@ function renderEmptyState(iconType, title, subtitle, buttonText, buttonAction, i
     return `
         <div class="empty-state">
             ${icons[iconType]}
-            <h3>${title}</h3>
-            <p>${subtitle}</p>
+            <h3 class="md-typescale-title-medium">${title}</h3>
+            <p class="md-typescale-body-medium">${subtitle}</p>
             ${buttonHtml}
         </div>
     `;
@@ -519,7 +519,7 @@ function openStoreModal(storeData = null) {
     const title = storeData ? 'Editar' : 'Crear';
     
     openModal(`
-        <div class="modal-title">${title} Tienda</div>
+        <div class="modal-title md-typescale-headline-small">${title} Tienda</div>
         <div class="text-field">
             <input 
                 id="st-name" 
@@ -634,7 +634,7 @@ function openProductModal(productId = null) {
     const title = productData ? 'Editar' : 'Nuevo';
     
     openModal(`
-        <div class="modal-title">${title} Producto</div>
+        <div class="modal-title md-typescale-headline-small">${title} Producto</div>
         <div class="text-field">
             <input 
                 id="p-name" 
@@ -724,14 +724,14 @@ function showProductMenu(productId) {
     }
     
     openBottomSheet(`
-        <div class="bottom-sheet-title">${product.name}</div>
-        <button class="bottom-sheet-item" onclick="openProductModal(${productId})">
+        <div class="bottom-sheet-title md-typescale-title-medium">${product.name}</div>
+        <button class="bottom-sheet-item md-typescale-body-large" onclick="openProductModal(${productId})">
             <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
             </svg>
             Editar
         </button>
-        <button class="bottom-sheet-item" onclick="deleteProduct(${product.id})">
+        <button class="bottom-sheet-item md-typescale-body-large" onclick="deleteProduct(${product.id})">
             <svg viewBox="0 0 24 24" style="fill:var(--md-sys-color-error)" aria-hidden="true">
                 <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
             </svg>
@@ -771,8 +771,8 @@ async function deleteProduct(productId) {
  */
 function confirmDeleteStore() {
     openModal(`
-        <div class="modal-title">¿Eliminar Tienda?</div>
-        <p style="color:var(--md-sys-color-on-surface-variant);font-size:14px;line-height:20px;margin-bottom:24px;">
+        <div class="modal-title md-typescale-headline-small">¿Eliminar Tienda?</div>
+        <p class="md-typescale-body-medium" style="color:var(--md-sys-color-on-surface-variant);line-height:20px;margin-bottom:24px;">
             Esta acción eliminará permanentemente tu tienda y todos los productos asociados. Esta operación no se puede deshacer.
         </p>
         <div class="modal-actions">
