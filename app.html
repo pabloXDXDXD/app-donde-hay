@@ -1539,7 +1539,7 @@
             
             closeBottomSheet();
             
-            // Verify ownership through store
+            // Client-side ownership check for better UX (real security is enforced by Supabase RLS policies)
             if (!STORE || STORE.user_id !== USER_ID) {
                 showToast('Error: No tienes permiso para eliminar este producto');
                 return;
@@ -1579,7 +1579,7 @@
                 return;
             }
             
-            // Verify that the store belongs to the current user
+            // Client-side ownership check for better UX (real security is enforced by Supabase RLS policies)
             if (STORE.user_id !== USER_ID) {
                 showToast('Error: No tienes permiso para eliminar esta tienda');
                 closeModal();

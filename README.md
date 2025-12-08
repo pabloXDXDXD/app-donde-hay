@@ -62,8 +62,11 @@ La lógica principal se puede dividir en las siguientes áreas:
     *   **Sincronización**: La función `refreshData()` se ejecuta cuando hay conexión para obtener los datos más recientes de Supabase y actualizar la caché local.
     *   **Funciones CRUD**:
         *   `submitStore()`: Crea o actualiza el perfil de la tienda.
+        *   `deleteStore()`: Elimina permanentemente la tienda y todos los productos asociados.
         *   `submitProduct()`: Crea o actualiza un producto.
         *   `deleteProduct()`: Elimina un producto.
+        *   `openProductModal()`: Abre el modal para crear o editar un producto (acepta product ID).
+        *   `showProductMenu()`: Muestra el menú contextual con opciones de editar/eliminar para un producto.
 
 4.  **Componentes UI Dinámicos**:
     *   Funciones como `openModal()`, `openBottomSheet()` y `showToast()` gestionan la aparición de elementos de interfaz interactivos.
@@ -87,12 +90,30 @@ La lógica principal se puede dividir en las siguientes áreas:
 -   **Página de Tienda**:
     -   Permite al usuario crear o editar los datos de su tienda (nombre, teléfono, etc.).
     -   Muestra el estado actual de la solicitud de la tienda (ej. pendiente, aprobada).
+    -   Permite **eliminar** la tienda y todos los productos asociados desde la página de Ajustes.
 
 -   **Página de Ajustes**:
-    -   Actualmente, solo contiene la funcionalidad para cerrar sesión.
+    -   Permite **eliminar la tienda** del usuario (acción irreversible que elimina la tienda y todos sus productos).
+    -   Contiene la funcionalidad para cerrar sesión.
 
 ## 5. Integración con Sketchware
 
 La comunicación entre el WebView y la aplicación nativa de Android se realiza a través de una interfaz de JavaScript.
 
 -   **`Android.showToast(message)`**: Esta función de JavaScript invoca un método nativo de Android para mostrar un "Toast", que es una notificación nativa y no intrusiva. Esto evita el uso de `alert()`, que es más disruptivo para la experiencia de usuario.
+
+## 6. Notas Técnicas y Correcciones Recientes
+
+### Gestión de Caché y Persistencia
+-   **Problema resuelto**: La función `loadCache()` ahora verifica que los valores cacheados no sean la cadena `'null'` antes de cargarlos, evitando que tiendas eliminadas reaparezcan tras cerrar sesión y volver a iniciar.
+-   La caché se limpia apropiadamente cuando se elimina una tienda usando `localStorage.removeItem()`.
+
+### CRUD de Productos
+-   **Problema resuelto**: Las operaciones de editar y eliminar productos ahora funcionan correctamente.
+-   La función `showProductMenu()` ahora acepta un `productId` en lugar de un objeto JSON, evitando problemas de parsing en atributos onclick.
+-   La función `openProductModal()` encuentra el producto correspondiente desde el array `PRODUCTS` usando el ID.
+-   Se agregó verificación de propiedad en `deleteProduct()` para mejorar la experiencia de usuario (la seguridad real se maneja mediante políticas RLS de Supabase).
+
+### Seguridad
+-   Las verificaciones de propiedad del lado del cliente (en `deleteStore()` y `deleteProduct()`) son para mejorar la UX, mostrando mensajes de error apropiados antes de realizar peticiones.
+-   La seguridad real se implementa a través de las políticas de Row Level Security (RLS) de Supabase en el backend.
