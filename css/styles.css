@@ -1,0 +1,635 @@
+/* Material Design 3 - Blue Dark Theme */
+:root {
+    /* Primary colors */
+    --md-sys-color-primary: #A8C7FA;
+    --md-sys-color-on-primary: #0B3058;
+    --md-sys-color-primary-container: #264772;
+    --md-sys-color-on-primary-container: #D4E3FF;
+    
+    /* Secondary colors */
+    --md-sys-color-secondary-container: #3A4859;
+    --md-sys-color-on-secondary-container: #D6E3F7;
+    
+    /* Surface colors */
+    --md-sys-color-background: #1A1C1E;
+    --md-sys-color-on-background: #E2E2E6;
+    --md-sys-color-surface: #1A1C1E;
+    --md-sys-color-surface-container: #1E2022;
+    --md-sys-color-surface-container-high: #292B2D;
+    --md-sys-color-on-surface-variant: #C3C7CF;
+    --md-sys-color-outline: #8D9199;
+    
+    /* Error colors */
+    --md-sys-color-error: #F2B8B5;
+    --md-sys-color-error-container: #8C1D18;
+    
+    /* Connection status colors */
+    --status-checking-bg: rgba(158, 158, 158, 0.2);
+    --status-checking-fg: #9e9e9e;
+    --status-checking-dot: #757575;
+    --status-online-bg: rgba(76, 175, 80, 0.2);
+    --status-online-fg: #81c784;
+    --status-online-dot: #4caf50;
+    --status-offline-bg: rgba(244, 67, 54, 0.2);
+    --status-offline-fg: #e57373;
+    --status-offline-dot: #f44336;
+    
+    /* M3 spacing scale (8dp grid) */
+    --spacing-1: 4px;
+    --spacing-2: 8px;
+    --spacing-3: 12px;
+    --spacing-4: 16px;
+    --spacing-5: 20px;
+    --spacing-6: 24px;
+    --spacing-8: 32px;
+    --spacing-10: 40px;
+    --spacing-12: 48px;
+}
+
+/* Global reset and base styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    font-family: 'Roboto', system-ui, -apple-system, sans-serif;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+html,
+body {
+    height: 100%;
+    overflow: hidden;
+    background: var(--md-sys-color-background);
+    color: var(--md-sys-color-on-background);
+}
+
+/* Splash screen */
+#splash-screen {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: var(--spacing-6);
+    background: var(--md-sys-color-background);
+    z-index: 9999;
+    transition: opacity 0.4s ease;
+}
+
+#splash-loader {
+    width: var(--spacing-12);
+    height: var(--spacing-12);
+    border: 4px solid var(--md-sys-color-primary-container);
+    border-top-color: var(--md-sys-color-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+#splash-text {
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 20px;
+    /* M3 Body Medium */
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* View management */
+.view {
+    position: fixed;
+    inset: 0;
+    display: none;
+    flex-direction: column;
+    background: var(--md-sys-color-background);
+}
+
+.view.active {
+    display: flex;
+    animation: fadeIn 0.3s;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Login and menu views */
+#login-view .content,
+#menu-view .content {
+    flex: 1;
+    overflow-y: auto;
+}
+
+#login-view .content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: var(--spacing-6);
+    max-width: 400px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+#menu-view .content {
+    padding: var(--spacing-4);
+    padding-bottom: 96px;
+}
+
+/* Authentication header */
+.auth-header {
+    text-align: center;
+    margin-bottom: var(--spacing-10);
+}
+
+.auth-header svg {
+    width: 64px;
+    height: 64px;
+    fill: var(--md-sys-color-primary);
+    margin-bottom: var(--spacing-4);
+}
+
+.auth-header h1 {
+    font-size: 28px;
+    font-weight: 400;
+    line-height: 36px;
+    color: var(--md-sys-color-on-background);
+    /* M3 Headline Medium */
+}
+
+/* M3 Text Field Component */
+.text-field {
+    position: relative;
+    margin-bottom: var(--spacing-4);
+}
+
+.text-field label {
+    position: absolute;
+    left: var(--spacing-4);
+    top: var(--spacing-2);
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 16px;
+    color: var(--md-sys-color-on-surface-variant);
+    pointer-events: none;
+    transition: all 0.2s;
+    /* M3 Body Small */
+}
+
+.text-field input {
+    width: 100%;
+    height: 56px;
+    padding: var(--spacing-5) var(--spacing-4) var(--spacing-2) var(--spacing-4);
+    background: var(--md-sys-color-surface-container);
+    border: 1px solid var(--md-sys-color-outline);
+    border-radius: var(--spacing-3);
+    color: var(--md-sys-color-on-background);
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 24px;
+    outline: none;
+    /* M3 Body Large */
+}
+
+.text-field input:focus {
+    border-color: var(--md-sys-color-primary);
+    border-width: 2px;
+    background: var(--md-sys-color-surface-container);
+}
+
+.text-field input:focus + label {
+    color: var(--md-sys-color-primary);
+}
+
+/* M3 Button Components */
+.btn-filled {
+    height: 40px;
+    padding: 0 var(--spacing-6);
+    background: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
+    border: none;
+    border-radius: var(--spacing-5);
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 20px;
+    cursor: pointer;
+    /* M3 Filled Button - for primary actions */
+    /* M3 Label Large */
+}
+
+.btn-text {
+    height: 40px;
+    padding: 0 var(--spacing-6);
+    background: transparent;
+    border: none;
+    color: var(--md-sys-color-primary);
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 20px;
+    cursor: pointer;
+    /* M3 Text Button - for secondary/less prominent actions */
+    /* M3 Label Large */
+}
+
+.btn-tonal {
+    height: 40px;
+    padding: 0 var(--spacing-6);
+    background: var(--md-sys-color-secondary-container);
+    color: var(--md-sys-color-on-secondary-container);
+    border: none;
+    border-radius: var(--spacing-5);
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 20px;
+    cursor: pointer;
+    /* M3 Tonal Button - for secondary actions with more emphasis than text buttons */
+    /* M3 Label Large */
+}
+
+/* Top bar */
+.top-bar {
+    height: 56px;
+    padding: 0 var(--spacing-4);
+    background: var(--md-sys-color-surface);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+}
+
+.top-bar-title {
+    font-size: 22px;
+    font-weight: 500;
+    line-height: 28px;
+    color: var(--md-sys-color-primary);
+    /* M3 Title Large */
+}
+
+/* Connection status chip */
+.status-chip {
+    height: 28px;
+    padding: 0 10px;
+    border-radius: var(--spacing-2);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: var(--status-checking-bg);
+    color: var(--status-checking-fg);
+    /* M3 Label Small */
+}
+
+.status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--status-checking-dot);
+}
+
+.status-chip.checking {
+    background: var(--status-checking-bg);
+    color: var(--status-checking-fg);
+}
+
+.status-chip.checking .status-dot {
+    background: var(--status-checking-dot);
+}
+
+.status-chip.online {
+    background: var(--status-online-bg);
+    color: var(--status-online-fg);
+}
+
+.status-chip.online .status-dot {
+    background: var(--status-online-dot);
+}
+
+.status-chip.offline {
+    background: var(--status-offline-bg);
+    color: var(--status-offline-fg);
+}
+
+.status-chip.offline .status-dot {
+    background: var(--status-offline-dot);
+}
+
+/* Page management */
+.page {
+    display: none;
+}
+
+.page.active {
+    display: block;
+}
+
+/* Products grid */
+#products-page {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: var(--spacing-3);
+}
+
+/* M3 Card Component */
+.card {
+    background: var(--md-sys-color-surface-container-high);
+    border-radius: var(--spacing-4);
+    padding: var(--spacing-4);
+    margin-bottom: var(--spacing-3);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Empty state */
+.empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: var(--spacing-12) var(--spacing-6);
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+.empty-state svg {
+    width: var(--spacing-12);
+    height: var(--spacing-12);
+    fill: currentColor;
+    margin-bottom: var(--spacing-4);
+}
+
+.empty-state h3 {
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 24px;
+    color: var(--md-sys-color-on-surface);
+    margin-bottom: var(--spacing-2);
+    /* M3 Title Medium */
+}
+
+/* Product card */
+.card-product {
+    justify-content: space-between;
+    min-height: 120px;
+}
+
+.card-product .name {
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 24px;
+    color: var(--md-sys-color-on-background);
+    /* M3 Body Large */
+}
+
+.card-product .category {
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 16px;
+    color: var(--md-sys-color-on-surface-variant);
+    margin-top: var(--spacing-1);
+    /* M3 Body Small */
+}
+
+.card-product .price {
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 24px;
+    color: var(--md-sys-color-primary);
+    /* Custom - emphasized price */
+}
+
+.card-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: var(--spacing-3);
+}
+
+/* Icon button */
+.icon-btn {
+    background: none;
+    border: none;
+    color: var(--md-sys-color-on-surface-variant);
+    padding: var(--spacing-2);
+    border-radius: 50%;
+    cursor: pointer;
+    margin: calc(-1 * var(--spacing-2));
+    /* M3 Icon Button */
+}
+
+.icon-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.icon-btn:active {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+/* M3 Floating Action Button (FAB) */
+.fab {
+    position: fixed;
+    bottom: 96px;
+    right: var(--spacing-4);
+    width: 56px;
+    height: 56px;
+    background: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-on-primary-container);
+    border: none;
+    border-radius: var(--spacing-4);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    /* M3 FAB - for primary screen action */
+}
+
+.fab svg {
+    width: 24px;
+    height: 24px;
+    fill: currentColor;
+}
+
+.fab:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* M3 Navigation Bar */
+.nav-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 80px;
+    background: var(--md-sys-color-surface-container);
+    display: flex;
+    justify-content: space-around;
+    z-index: 100;
+}
+
+.nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-1);
+    padding: var(--spacing-3) 0;
+    background: none;
+    border: none;
+    color: var(--md-sys-color-on-surface-variant);
+    cursor: pointer;
+}
+
+.nav-icon {
+    width: 64px;
+    height: 32px;
+    border-radius: var(--spacing-4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+}
+
+.nav-icon svg {
+    width: 24px;
+    height: 24px;
+    fill: currentColor;
+}
+
+.nav-item.active .nav-icon {
+    background: var(--md-sys-color-secondary-container);
+    color: var(--md-sys-color-on-secondary-container);
+}
+
+.nav-item.active {
+    color: var(--md-sys-color-on-surface);
+}
+
+.nav-label {
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 16px;
+    /* M3 Label Medium */
+}
+
+/* M3 Modal and Bottom Sheet overlays */
+.modal-overlay,
+.bottom-sheet-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(26, 28, 30, 0.6);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    display: none;
+    z-index: 200;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.bottom-sheet-overlay {
+    align-items: flex-end;
+}
+
+.modal-overlay {
+    align-items: center;
+    justify-content: center;
+}
+
+.bottom-sheet-overlay.active,
+.modal-overlay.active {
+    display: flex;
+    opacity: 1;
+}
+
+/* M3 Modal */
+.modal {
+    background: var(--md-sys-color-surface-container-high);
+    border-radius: 28px;
+    padding: var(--spacing-6);
+    width: 90%;
+    max-width: 320px;
+}
+
+.modal-title {
+    font-size: 24px;
+    font-weight: 400;
+    line-height: 32px;
+    margin-bottom: var(--spacing-6);
+    color: var(--md-sys-color-on-surface);
+    /* M3 Headline Small */
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--spacing-2);
+    margin-top: var(--spacing-6);
+}
+
+/* M3 Bottom Sheet */
+.bottom-sheet-content {
+    background: var(--md-sys-color-surface-container-high);
+    width: 100%;
+    padding: var(--spacing-4);
+    padding-bottom: var(--spacing-8);
+    border-radius: 28px 28px 0 0;
+    transform: translateY(100%);
+    transition: transform 0.3s ease-out;
+}
+
+.bottom-sheet-overlay.active .bottom-sheet-content {
+    transform: translateY(0);
+}
+
+.bottom-sheet-title {
+    font-size: 20px;
+    font-weight: 500;
+    line-height: 28px;
+    margin-bottom: var(--spacing-4);
+    padding: 0 var(--spacing-2);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--md-sys-color-on-surface);
+    /* M3 Title Medium */
+}
+
+.bottom-sheet-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-4);
+    width: 100%;
+    padding: var(--spacing-3) var(--spacing-2);
+    border: none;
+    background: transparent;
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 24px;
+    text-align: left;
+    border-radius: var(--spacing-2);
+    cursor: pointer;
+    /* M3 Body Large */
+}
+
+.bottom-sheet-item:active {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.bottom-sheet-item svg {
+    width: 24px;
+    height: 24px;
+    fill: currentColor;
+}
