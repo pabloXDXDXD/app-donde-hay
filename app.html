@@ -985,13 +985,23 @@
          */
         function loadCache() {
             const storeCache = localStorage.getItem('store_cache');
-            if (storeCache && storeCache !== 'null') {
-                STORE = JSON.parse(storeCache);
+            if (storeCache && storeCache !== 'null' && storeCache !== 'undefined') {
+                try {
+                    STORE = JSON.parse(storeCache);
+                } catch (e) {
+                    console.error('Error parsing store cache:', e);
+                    localStorage.removeItem('store_cache');
+                }
             }
             
             const productsCache = localStorage.getItem('products_cache');
-            if (productsCache && productsCache !== 'null') {
-                PRODUCTS = JSON.parse(productsCache);
+            if (productsCache && productsCache !== 'null' && productsCache !== 'undefined') {
+                try {
+                    PRODUCTS = JSON.parse(productsCache);
+                } catch (e) {
+                    console.error('Error parsing products cache:', e);
+                    localStorage.removeItem('products_cache');
+                }
             }
         }
         
