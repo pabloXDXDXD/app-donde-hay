@@ -1155,7 +1155,24 @@
                 return;
             }
             
+            // Only show delete store button if user has a store
+            const deleteStoreSection = STORE ? `
+                <div class="card" onclick="confirmDeleteStore()" style="cursor:pointer;margin-bottom:16px;">
+                    <div style="display:flex;align-items:center;gap:16px;">
+                        <div style="width:40px;height:40px;background:var(--md-sys-color-error-container);border-radius:50%;display:flex;align-items:center;justify-content:center;">
+                            <svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:var(--md-sys-color-error);" aria-hidden="true">
+                                <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                            </svg>
+                        </div>
+                        <div style="color:var(--md-sys-color-error);font-weight:500;">
+                            Eliminar Tienda
+                        </div>
+                    </div>
+                </div>
+            ` : '';
+            
             settingsPage.innerHTML = `
+                ${deleteStoreSection}
                 <div class="card" onclick="handleLogout()" style="cursor:pointer;">
                     <div style="display:flex;align-items:center;gap:16px;">
                         <div style="width:40px;height:40px;background:var(--md-sys-color-error-container);border-radius:50%;display:flex;align-items:center;justify-content:center;">
@@ -1339,7 +1356,7 @@
                 </div>
                 <div class="modal-actions">
                     <button class="btn-text" onclick="closeModal()">Cancelar</button>
-                    <button class="btn-filled" onclick="submitStore()">Guardar</button>
+                    <button class="btn-filled" id="store-save-btn" onclick="submitStore()">Guardar</button>
                 </div>
             `);
         }
@@ -1351,9 +1368,16 @@
             const businessName = document.getElementById('st-name').value.trim();
             const phone = document.getElementById('st-phone').value.trim();
             const email = document.getElementById('st-email').value.trim();
+            const saveBtn = document.getElementById('store-save-btn');
             
             if (!businessName || !phone || !email) {
                 return showToast('Nombre, teléfono y email requeridos');
+            }
+            
+            // Disable button and show loading state
+            if (saveBtn) {
+                saveBtn.disabled = true;
+                saveBtn.textContent = 'Guardando...';
             }
             
             const storeData = {
@@ -1372,6 +1396,11 @@
             
             if (result.error) {
                 showToast(`Error: ${result.error.message}`);
+                // Re-enable button on error
+                if (saveBtn) {
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = 'Guardar';
+                }
             } else {
                 closeModal();
                 showToast(STORE ? 'Tienda actualizada' : 'Solicitud enviada');
@@ -1388,6 +1417,7 @@
             }
             
             const title = productData ? 'Editar' : 'Nuevo';
+            const productId = productData ? productData.id : null;
             
             openModal(`
                 <div class="modal-title">${title} Producto</div>
@@ -1421,7 +1451,7 @@
                 </div>
                 <div class="modal-actions">
                     <button class="btn-text" onclick="closeModal()">Cancelar</button>
-                    <button class="btn-filled" onclick="submitProduct(${productData?.id || null})">Guardar</button>
+                    <button class="btn-filled" id="product-save-btn" onclick="submitProduct(${productId})">Guardar</button>
                 </div>
             `);
         }
@@ -1432,9 +1462,16 @@
         async function submitProduct(productId = null) {
             const name = document.getElementById('p-name').value.trim();
             const price = document.getElementById('p-price').value;
+            const saveBtn = document.getElementById('product-save-btn');
             
             if (!name || !price) {
                 return showToast('Nombre y precio requeridos');
+            }
+            
+            // Disable button and show loading state
+            if (saveBtn) {
+                saveBtn.disabled = true;
+                saveBtn.textContent = 'Guardando...';
             }
             
             const productData = {
@@ -1450,6 +1487,11 @@
             
             if (error) {
                 showToast(`Error: ${error.message}`);
+                // Re-enable button on error
+                if (saveBtn) {
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = 'Guardar';
+                }
             } else {
                 closeModal();
                 showToast('Producto guardado');
@@ -1498,6 +1540,86 @@
                 showToast('Producto eliminado');
                 await refreshData();
             }
+        }
+        
+        /**
+         * Confirm delete store with modal
+         */
+        function confirmDeleteStore() {
+            openModal(`
+                <div class="modal-title">¿Eliminar Tienda?</div>
+                <p style="color:var(--md-sys-color-on-surface-variant);font-size:14px;line-height:20px;margin-bottom:24px;">
+                    Esta acción eliminará permanentemente tu tienda y todos los productos asociados. Esta operación no se puede deshacer.
+                </p>
+                <div class="modal-actions">
+                    <button class="btn-text" onclick="closeModal()">Cancelar</button>
+                    <button class="btn-filled" id="delete-store-btn" onclick="deleteStore()" style="background:var(--md-sys-color-error);">Eliminar</button>
+                </div>
+            `);
+        }
+        
+        /**
+         * Delete store and all associated products
+         */
+        async function deleteStore() {
+            if (!STORE) {
+                return;
+            }
+            
+            const deleteBtn = document.getElementById('delete-store-btn');
+            
+            // Disable button and show loading state
+            if (deleteBtn) {
+                deleteBtn.disabled = true;
+                deleteBtn.textContent = 'Eliminando...';
+            }
+            
+            // First delete all products associated with this store
+            const { error: productsError } = await supabase
+                .from('products')
+                .delete()
+                .eq('store_id', STORE.id);
+            
+            if (productsError) {
+                showToast(`Error al eliminar productos: ${productsError.message}`);
+                // Re-enable button on error
+                if (deleteBtn) {
+                    deleteBtn.disabled = false;
+                    deleteBtn.textContent = 'Eliminar';
+                }
+                return;
+            }
+            
+            // Then delete the store request
+            const { error: storeError } = await supabase
+                .from('store_requests')
+                .delete()
+                .eq('user_id', USER_ID);
+            
+            if (storeError) {
+                showToast(`Error al eliminar tienda: ${storeError.message}`);
+                // Re-enable button on error
+                if (deleteBtn) {
+                    deleteBtn.disabled = false;
+                    deleteBtn.textContent = 'Eliminar';
+                }
+                return;
+            }
+            
+            // Clear local cache
+            STORE = null;
+            PRODUCTS = [];
+            localStorage.removeItem('store_cache');
+            localStorage.removeItem('products_cache');
+            
+            closeModal();
+            showToast('Tienda eliminada correctamente');
+            
+            // Refresh UI
+            renderAllUI();
+            
+            // Navigate to store page to show the "create store" option
+            navigateTo('store-page', document.querySelector('.nav-item[data-page="store-page"]'));
         }
         
         /**
