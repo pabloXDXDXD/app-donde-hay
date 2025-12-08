@@ -1566,6 +1566,13 @@
                 return;
             }
             
+            // Verify that the store belongs to the current user
+            if (STORE.user_id !== USER_ID) {
+                showToast('Error: No tienes permiso para eliminar esta tienda');
+                closeModal();
+                return;
+            }
+            
             const deleteBtn = document.getElementById('delete-store-btn');
             
             // Disable button and show loading state
