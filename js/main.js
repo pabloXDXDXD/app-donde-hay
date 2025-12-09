@@ -910,3 +910,21 @@ function showToast(message) {
         alert(message);
     }
 }
+
+// Export functions to window object for onclick handlers in HTML
+window.showSubView = showSubView;
+window.handleLogin = handleLogin;
+window.handleRegister = handleRegister;
+window.handleLogout = handleLogout;
+window.navigateTo = navigateTo;
+window.openProductModal = openProductModal;
+window.submitProduct = submitProduct;
+window.showProductMenu = showProductMenu;
+window.deleteProduct = deleteProduct;
+window.openStoreModal = openStoreModal;
+window.submitStore = submitStore;
+window.confirmDeleteStore = confirmDeleteStore;
+window.deleteStore = deleteStore;
+window.closeModal = closeModal;
+window.closeBottomSheet = closeBottomSheet;
+window.refreshData = refreshData;
