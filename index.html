@@ -5,28 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Mi App</title>
     
-    <!-- Import map for Material 3 dependencies -->
-    <!-- Note: Material 3 Web Components currently require internet connection -->
-    <!-- The /npm/ imports will resolve to CDN when online -->
-    <script type="importmap">
-    {
-        "imports": {
-            "/npm/": "https://cdn.jsdelivr.net/npm/"
-        }
-    }
-    </script>
-    
-    <!-- Material 3 Web Components -->
-    <script type="module">
-        import './js/material-all.js';
-        import { styles as typescaleStyles } from './js/material-styles.js';
-        
-        // Inject Material typescale styles
-        const style = document.createElement('style');
-        style.textContent = typescaleStyles.cssText;
-        document.head.appendChild(style);
-    </script>
-    
     <!-- Supabase Client -->
     <script src="./supabase.js"></script>
     
@@ -56,65 +34,75 @@
                 </header>
                 
                 <form id="login-form" onsubmit="event.preventDefault(); handleLogin();">
-                    <md-outlined-text-field
-                        type="email"
-                        id="l-email"
-                        label="Correo electrónico"
-                        autocomplete="email"
-                        required
-                        style="width: 100%; margin-bottom: 16px;">
-                    </md-outlined-text-field>
+                    <div class="text-field-wrapper" style="width: 100%; margin-bottom: 16px;">
+                        <input
+                            type="email"
+                            id="l-email"
+                            class="text-field"
+                            placeholder=" "
+                            autocomplete="email"
+                            required>
+                        <label for="l-email" class="text-field-label">Correo electrónico</label>
+                    </div>
                     
-                    <md-outlined-text-field
-                        type="password"
-                        id="l-pass"
-                        label="Contraseña"
-                        autocomplete="current-password"
-                        required
-                        style="width: 100%; margin-bottom: 16px;">
-                    </md-outlined-text-field>
+                    <div class="text-field-wrapper" style="width: 100%; margin-bottom: 16px;">
+                        <input
+                            type="password"
+                            id="l-pass"
+                            class="text-field"
+                            placeholder=" "
+                            autocomplete="current-password"
+                            required>
+                        <label for="l-pass" class="text-field-label">Contraseña</label>
+                    </div>
                     
-                    <md-filled-button type="submit" style="width:100%;margin-top:16px;">
+                    <button type="submit" class="btn-filled" style="width:100%;margin-top:16px;">
                         Iniciar Sesión
-                    </md-filled-button>
-                    <md-text-button type="button" style="width:100%;margin-top:8px;" onclick="showSubView('register')">
+                    </button>
+                    <button type="button" class="btn-text" style="width:100%;margin-top:8px;" onclick="showSubView('register')">
                         Crear una cuenta
-                    </md-text-button>
+                    </button>
                 </form>
                 
                 <form id="register-form" style="display:none;" onsubmit="event.preventDefault(); handleRegister();">
-                    <md-outlined-text-field
-                        type="email"
-                        id="r-email"
-                        label="Correo electrónico"
-                        autocomplete="email"
-                        required
-                        style="width: 100%; margin-bottom: 16px;">
-                    </md-outlined-text-field>
+                    <div class="text-field-wrapper" style="width: 100%; margin-bottom: 16px;">
+                        <input
+                            type="email"
+                            id="r-email"
+                            class="text-field"
+                            placeholder=" "
+                            autocomplete="email"
+                            required>
+                        <label for="r-email" class="text-field-label">Correo electrónico</label>
+                    </div>
                     
-                    <md-outlined-text-field
-                        type="password"
-                        id="r-pass"
-                        label="Contraseña (mín 6 caracteres)"
-                        minlength="6"
-                        required
-                        style="width: 100%; margin-bottom: 16px;">
-                    </md-outlined-text-field>
+                    <div class="text-field-wrapper" style="width: 100%; margin-bottom: 16px;">
+                        <input
+                            type="password"
+                            id="r-pass"
+                            class="text-field"
+                            placeholder=" "
+                            minlength="6"
+                            required>
+                        <label for="r-pass" class="text-field-label">Contraseña (mín 6 caracteres)</label>
+                    </div>
                     
-                    <md-outlined-text-field
-                        type="password"
-                        id="r-pass-confirm"
-                        label="Confirmar contraseña"
-                        required
-                        style="width: 100%; margin-bottom: 16px;">
-                    </md-outlined-text-field>
+                    <div class="text-field-wrapper" style="width: 100%; margin-bottom: 16px;">
+                        <input
+                            type="password"
+                            id="r-pass-confirm"
+                            class="text-field"
+                            placeholder=" "
+                            required>
+                        <label for="r-pass-confirm" class="text-field-label">Confirmar contraseña</label>
+                    </div>
                     
-                    <md-filled-button type="submit" style="width:100%;margin-top:16px;">
+                    <button type="submit" class="btn-filled" style="width:100%;margin-top:16px;">
                         Crear Cuenta
-                    </md-filled-button>
-                    <md-text-button type="button" style="width:100%;margin-top:8px;" onclick="showSubView('login')">
+                    </button>
+                    <button type="button" class="btn-text" style="width:100%;margin-top:8px;" onclick="showSubView('login')">
                         Ya tengo una cuenta
-                    </md-text-button>
+                    </button>
                 </form>
             </main>
         </div>

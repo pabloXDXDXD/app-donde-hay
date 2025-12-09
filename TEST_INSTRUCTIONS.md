@@ -7,12 +7,10 @@ La aplicación ha sido refactorizada con la siguiente estructura:
 ```
 app-donde-hay/
 ├── css/
-│   └── styles.css          # Todos los estilos CSS de la aplicación
+│   └── styles.css          # Todos los estilos CSS de la aplicación (incluye Material Design 3)
 ├── js/
-│   ├── main.js            # Toda la lógica JavaScript de la aplicación
-│   ├── material-all.js     # Componentes de Material 3 Web Components
-│   └── material-styles.js  # Estilos de tipografía de Material 3
-├── index.html             # HTML principal con Material 3 components
+│   └── main.js            # Toda la lógica JavaScript de la aplicación
+├── index.html             # HTML principal con formularios nativos HTML
 ├── supabase.js            # Cliente de Supabase
 └── app.html               # Archivo original (mantenido para referencia)
 ```
@@ -27,11 +25,11 @@ app-donde-hay/
 - ✅ CSS extraído a `css/styles.css`
 - ✅ JavaScript extraído a `js/main.js`
 
-### 3. Material 3 Web Components
-- ✅ Implementados en `index.html`:
-  - `<md-outlined-text-field>` para campos de texto
-  - `<md-filled-button>` para botones primarios
-  - `<md-text-button>` para botones secundarios
+### 3. Formularios de Autenticación
+- ✅ Implementados con elementos HTML nativos:
+  - Campos de texto con animación de label flotante estilo Material Design
+  - Botones con estilos Material Design 3
+  - Sin dependencia de componentes web externos
 
 ### 4. Tipografía Material 3
 - ✅ Clases aplicadas en todo el código:
@@ -75,11 +73,12 @@ Luego abre en tu navegador: `http://localhost:8000/index.html`
 
 ## Verificaciones
 
-### Material 3 Components
-Verifica que los componentes de Material 3 se renderizan correctamente:
-- Los campos de texto deben tener el estilo de Material Design
-- Los botones deben tener las ondas de Material (ripple effect)
+### Material Design 3 Components
+Verifica que los componentes de Material Design 3 se renderizan correctamente:
+- Los campos de texto deben tener el estilo outlined de Material Design con labels flotantes
+- Los botones deben tener las ondas de Material (ripple effect simulado con CSS)
 - La tipografía debe seguir la escala de Material Design
+- Todo funciona completamente offline sin conexión a internet
 
 ### Funcionalidad
 La aplicación debe mantener toda la funcionalidad original:
@@ -92,25 +91,32 @@ La aplicación debe mantener toda la funcionalidad original:
 
 ## Notas Importantes
 
-1. **Material 3 Web Components**: Los archivos de Material 3 (`material-all.js` y `material-styles.js`) dependen de imports desde CDN de jsDelivr mediante un import map.
-2. **Conexión a Internet**: Se requiere conexión a internet para que los componentes de Material 3 funcionen correctamente en la primera carga.
-3. **Modo Offline**: El CSS y la lógica JavaScript funcionan offline. Los datos previamente cacheados se pueden visualizar sin conexión.
-4. **Archivo Original**: El archivo `app.html` original se mantiene en el repositorio para referencia.
+1. **Material Design 3**: La aplicación ahora usa CSS personalizado para implementar Material Design 3, eliminando la dependencia de CDN externos.
+2. **Modo Completamente Offline**: La aplicación funciona completamente sin conexión a internet. Todos los estilos y componentes están incluidos localmente.
+3. **Archivo Original**: El archivo `app.html` original se mantiene en el repositorio para referencia.
 
 ## Cambios Recientes (Diciembre 2025)
 
 ### ✅ Correcciones Aplicadas
 
-1. **Login y Registro**: 
+1. **Eliminación de Dependencia de CDN**:
+   - Se eliminaron los archivos `material-all.js` y `material-styles.js` que dependían de imports desde CDN.
+   - Se eliminó el `importmap` que redirigía a jsDelivr CDN.
+   - Se reemplazaron los componentes `<md-outlined-text-field>`, `<md-filled-button>`, y `<md-text-button>` con elementos HTML estándar.
+   - Se agregaron estilos CSS personalizados para Material Design 3 (campos de texto y botones).
+
+2. **Login y Registro**: 
    - Las funciones `handleLogin`, `handleRegister` y `showSubView` ahora están expuestas globalmente.
    - El cambio entre las vistas de login y registro funciona correctamente.
    - Los formularios de autenticación son completamente funcionales.
+   - Los campos de texto ahora tienen animación de label flotante estilo Material Design.
 
-2. **Estilos Offline**:
-   - Los estilos CSS (`css/styles.css`) se cargan correctamente sin conexión.
-   - La aplicación mantiene su apariencia visual incluso sin Material Web Components.
+3. **Estilos Offline**:
+   - Todos los estilos CSS están incluidos localmente en `css/styles.css`.
+   - La aplicación mantiene su apariencia Material Design 3 completamente offline.
    - Los datos cacheados se pueden visualizar con el estilo apropiado.
+   - Se agregaron clases de tipografía Material Design 3.
 
-3. **Documentación**:
+4. **Documentación**:
    - README.md actualizado con información clara sobre capacidades offline.
    - Instrucciones de prueba actualizadas.
