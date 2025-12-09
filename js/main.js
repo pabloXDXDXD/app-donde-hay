@@ -411,8 +411,9 @@ function renderEmptyState(iconType, title, subtitle, buttonText, buttonAction, i
         error: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>'
     };
     
+    const buttonTag = isSecondaryButton ? 'md-filled-tonal-button' : 'md-filled-button';
     const buttonHtml = buttonText 
-        ? `<button class="${isSecondaryButton ? 'btn-tonal' : 'btn-filled'}" onclick="${buttonAction}" style="margin-top:16px;">${buttonText}</button>` 
+        ? `<${buttonTag} onclick="${buttonAction}" style="margin-top:16px;">${buttonText}</${buttonTag}>` 
         : '';
     
     return `
@@ -475,7 +476,7 @@ function updateFabVisibility() {
     }
     
     const isProductsPage = document.getElementById('products-page')?.classList.contains('active');
-    fab.style.display = (isProductsPage && STORE?.status === 'approved') ? 'flex' : 'none';
+    fab.style.display = (isProductsPage && STORE?.status === 'approved') ? 'inline-flex' : 'none';
 }
 
 /**
@@ -525,54 +526,46 @@ function openStoreModal(storeData = null) {
     
     openModal(`
         <div class="modal-title md-typescale-headline-small">${title} Tienda</div>
-        <div class="text-field">
-            <input 
-                id="st-name" 
-                value="${storeData?.business_name || ''}" 
-                placeholder="Nombre del Negocio" 
-                aria-label="Nombre del Negocio"
-            />
-            <label for="st-name">Nombre del Negocio</label>
-        </div>
-        <div class="text-field">
-            <input 
-                id="st-type" 
-                value="${storeData?.business_type || ''}" 
-                placeholder="Tipo (ej: Restaurante)" 
-                aria-label="Tipo de Negocio"
-            />
-            <label for="st-type">Tipo de Negocio</label>
-        </div>
-        <div class="text-field">
-            <input 
-                id="st-phone" 
-                value="${storeData?.phone || ''}" 
-                placeholder="Teléfono" 
-                aria-label="Teléfono"
-            />
-            <label for="st-phone">Teléfono</label>
-        </div>
-        <div class="text-field">
-            <input 
-                id="st-email" 
-                value="${storeData?.email || ''}" 
-                placeholder="Email" 
-                aria-label="Email"
-            />
-            <label for="st-email">Email</label>
-        </div>
-        <div class="text-field">
-            <input 
-                id="st-address" 
-                value="${storeData?.address || ''}" 
-                placeholder="Dirección" 
-                aria-label="Dirección"
-            />
-            <label for="st-address">Dirección</label>
-        </div>
+        <md-outlined-text-field
+            id="st-name"
+            label="Nombre del Negocio"
+            value="${storeData?.business_name || ''}"
+            aria-label="Nombre del Negocio"
+            style="width:100%;margin-bottom:12px;">
+        </md-outlined-text-field>
+        <md-outlined-text-field
+            id="st-type"
+            label="Tipo de Negocio"
+            value="${storeData?.business_type || ''}"
+            aria-label="Tipo de Negocio"
+            style="width:100%;margin-bottom:12px;">
+        </md-outlined-text-field>
+        <md-outlined-text-field
+            id="st-phone"
+            label="Teléfono"
+            type="tel"
+            value="${storeData?.phone || ''}"
+            aria-label="Teléfono"
+            style="width:100%;margin-bottom:12px;">
+        </md-outlined-text-field>
+        <md-outlined-text-field
+            id="st-email"
+            label="Email"
+            type="email"
+            value="${storeData?.email || ''}"
+            aria-label="Email"
+            style="width:100%;margin-bottom:12px;">
+        </md-outlined-text-field>
+        <md-outlined-text-field
+            id="st-address"
+            label="Dirección"
+            value="${storeData?.address || ''}"
+            aria-label="Dirección"
+            style="width:100%;margin-bottom:12px;">
+        </md-outlined-text-field>
         <div class="modal-actions">
-            <button class="btn-text" onclick="closeModal()">Cancelar</button>
-            <button class="btn-filled" id="store-save-btn" onclick="submitStore()">Guardar</button>
+            <md-text-button onclick="closeModal()">Cancelar</md-text-button>
+            <md-filled-button id="store-save-btn" onclick="submitStore()">Guardar</md-filled-button>
         </div>
     `);
 }
@@ -640,37 +633,34 @@ function openProductModal(productId = null) {
     
     openModal(`
         <div class="modal-title md-typescale-headline-small">${title} Producto</div>
-        <div class="text-field">
-            <input 
-                id="p-name" 
-                placeholder="Nombre" 
-                value="${productData?.name || ''}" 
-                aria-label="Nombre del Producto"
-            />
-            <label for="p-name">Nombre del Producto</label>
-        </div>
-        <div class="text-field">
-            <input 
-                id="p-price" 
-                type="number" 
-                placeholder="Precio" 
-                value="${productData?.price || ''}" 
-                aria-label="Precio"
-            />
-            <label for="p-price">Precio</label>
-        </div>
-        <div class="text-field">
-            <input 
-                id="p-cat" 
-                placeholder="Categoría" 
-                value="${productData?.category || ''}" 
-                aria-label="Categoría"
-            />
-            <label for="p-cat">Categoría</label>
-        </div>
+        <md-outlined-text-field
+            id="p-name"
+            label="Nombre del Producto"
+            placeholder="Nombre"
+            value="${productData?.name || ''}"
+            aria-label="Nombre del Producto"
+            style="width:100%;margin-bottom:12px;">
+        </md-outlined-text-field>
+        <md-outlined-text-field
+            id="p-price"
+            label="Precio"
+            type="number"
+            placeholder="Precio"
+            value="${productData?.price || ''}"
+            aria-label="Precio"
+            style="width:100%;margin-bottom:12px;">
+        </md-outlined-text-field>
+        <md-outlined-text-field
+            id="p-cat"
+            label="Categoría"
+            placeholder="Categoría"
+            value="${productData?.category || ''}"
+            aria-label="Categoría"
+            style="width:100%;margin-bottom:12px;">
+        </md-outlined-text-field>
         <div class="modal-actions">
-            <button class="btn-text" onclick="closeModal()">Cancelar</button>
-            <button class="btn-filled" id="product-save-btn" onclick="submitProduct(${productId})">Guardar</button>
+            <md-text-button onclick="closeModal()">Cancelar</md-text-button>
+            <md-filled-button id="product-save-btn" onclick="submitProduct(${productId})">Guardar</md-filled-button>
         </div>
     `);
 }
@@ -781,8 +771,8 @@ function confirmDeleteStore() {
             Esta acción eliminará permanentemente tu tienda y todos los productos asociados. Esta operación no se puede deshacer.
         </p>
         <div class="modal-actions">
-            <button class="btn-text" onclick="closeModal()">Cancelar</button>
-            <button class="btn-filled" id="delete-store-btn" onclick="deleteStore()" style="background:var(--md-sys-color-error);">Eliminar</button>
+            <md-text-button onclick="closeModal()">Cancelar</md-text-button>
+            <md-filled-button id="delete-store-btn" onclick="deleteStore()" style="background:var(--md-sys-color-error);color:var(--md-sys-color-on-error);">Eliminar</md-filled-button>
         </div>
     `);
 }
