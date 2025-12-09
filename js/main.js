@@ -621,6 +621,14 @@ async function submitStore() {
 }
 
 /**
+ * Find product by ID with normalized comparison
+ */
+function findProductById(productId) {
+    const normalizedId = productId != null ? String(productId) : '';
+    return PRODUCTS.find(p => String(p.id) === normalizedId);
+}
+
+/**
  * Open product modal for creating/editing product
  */
 function openProductModal(productId = null) {
@@ -630,8 +638,7 @@ function openProductModal(productId = null) {
     }
     
     // Find product data if editing
-    const normalizedId = productId != null ? String(productId) : null;
-    const productData = normalizedId ? PRODUCTS.find(p => String(p.id) === normalizedId) : null;
+    const productData = productId != null ? findProductById(productId) : null;
     
     const title = productData ? 'Editar' : 'Nuevo';
     const productIdLiteral = JSON.stringify(productId);
@@ -717,8 +724,7 @@ async function submitProduct(productId = null) {
  * Show product options menu (bottom sheet)
  */
 function showProductMenu(productId) {
-    const normalizedId = productId != null ? String(productId) : '';
-    const product = PRODUCTS.find(p => String(p.id) === normalizedId);
+    const product = findProductById(productId);
     if (!product) {
         showToast('Producto no encontrado');
         return;
@@ -751,7 +757,7 @@ async function deleteProduct(productId) {
     
     closeBottomSheet();
     
-    const product = PRODUCTS.find(p => String(p.id) === String(productId));
+    const product = findProductById(productId);
     if (!product) {
         showToast('Producto no encontrado');
         return;
