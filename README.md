@@ -16,7 +16,7 @@ La interfaz de usuario sigue los principios de **Material Design 3**, utilizando
 
 -   **Frontend**: HTML, CSS y JavaScript (Vanilla JS). No se utiliza ningún framework externo.
 -   **Backend & Base de Datos**: **Supabase** se encarga de la autenticación de usuarios y de la base de datos (PostgreSQL).
--   **Diseño**: **Material Design 3** con implementación personalizada (sin dependencias externas).
+-   **Diseño**: **Material Design 3** con implementación personalizada y componentes de Material Web servidos de forma local (sin dependencias externas).
 -   **Entorno**: La aplicación está diseñada para ser ejecutada en un **WebView** dentro de una aplicación de Android (Sketchware Pro), como lo demuestra la comunicación con la interfaz nativa `Android.showToast()`.
 
 ## 3. Arquitectura de la Aplicación
@@ -144,14 +144,11 @@ La aplicación tiene capacidades offline limitadas:
 
 **✅ Funciona sin conexión:**
 -   Estilos CSS locales (todos los estilos de `css/styles.css`)
+-   Componentes de Material Web (`@material/web`) servidos desde `vendor/` mediante el `importmap` de `index.html`
 -   Lógica JavaScript de la aplicación (`js/main.js`)
 -   Navegación y gestión de caché de datos
 -   Visualización de datos cacheados previamente
 -   Cliente de Supabase (`supabase.js`)
 
 **❌ Requiere conexión a internet:**
--   **Material 3 Web Components**: Los componentes de Material Design (`<md-outlined-text-field>`, `<md-filled-button>`, etc.) requieren dependencias de CDN.
--   Las dependencias de Lit (`/npm/lit@3.3.1/+esm`) se cargan desde jsDelivr.
 -   **Backend Supabase**: Las operaciones de base de datos y autenticación requieren conectividad.
-
-**Recomendación**: Para uso en entornos sin conexión garantizada, considere usar elementos HTML nativos (`<input>`, `<button>`, etc.) en lugar de Material Web Components, o descargue todas las dependencias de Lit localmente.
