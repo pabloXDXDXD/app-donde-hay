@@ -335,7 +335,7 @@ function renderProducts() {
         );
     } else {
         productsPage.innerHTML = PRODUCTS.map(product => {
-            const productIdLiteral = JSON.stringify(String(product.id));
+            const productIdLiteral = JSON.stringify(product.id);
             return `
                 <div class="card card-product">
                     <div style="flex:1;">
