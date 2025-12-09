@@ -325,6 +325,56 @@
             cursor: not-allowed;
         }
         
+        .btn-tonal {
+            position: relative;
+            height: 40px;
+            padding: 0 var(--spacing-6);
+            background: var(--md-sys-color-secondary-container);
+            color: var(--md-sys-color-on-secondary-container);
+            border: none;
+            border-radius: var(--spacing-5);
+            font-size: 14px;
+            font-weight: 500;
+            line-height: 20px;
+            cursor: pointer;
+            box-shadow: var(--md-sys-elevation-1);
+            transition: box-shadow 0.2s cubic-bezier(0.2, 0, 0, 1);
+            overflow: hidden;
+            /* M3 Tonal Button - for secondary actions with more emphasis than text buttons */
+            /* M3 Label Large */
+        }
+        
+        .btn-tonal::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: currentColor;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        
+        .btn-tonal:hover::before {
+            opacity: var(--md-sys-state-hover-opacity);
+        }
+        
+        .btn-tonal:focus::before {
+            opacity: var(--md-sys-state-focus-opacity);
+        }
+        
+        .btn-tonal:active {
+            box-shadow: none;
+        }
+        
+        .btn-tonal:active::before {
+            opacity: var(--md-sys-state-pressed-opacity);
+        }
+        
+        .btn-tonal:disabled {
+            opacity: 0.38;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        
         /* Top bar */
         .top-bar {
             height: 56px;

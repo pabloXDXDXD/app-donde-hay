@@ -851,9 +851,6 @@ body {
     padding: 15px;
     padding-top: 19px;
 }
-    padding: 15px; /* Compensate for increased border */
-    padding-top: 19px;
-}
 
 .text-field:focus + .text-field-label,
 .text-field:not(:placeholder-shown) + .text-field-label {
