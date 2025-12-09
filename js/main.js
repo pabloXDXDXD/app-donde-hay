@@ -335,7 +335,7 @@ function renderProducts() {
         );
     } else {
         productsPage.innerHTML = PRODUCTS.map(product => {
-            const productId = JSON.stringify(product.id);
+            const productIdLiteral = JSON.stringify(String(product.id));
             return `
                 <div class="card card-product">
                     <div style="flex:1;">
@@ -346,7 +346,7 @@ function renderProducts() {
                         <div class="price">${'$' + product.price}</div>
                         <button 
                             class="icon-btn" 
-                            onclick="showProductMenu(${productId})"
+                            onclick="showProductMenu(${productIdLiteral})"
                             aria-label="Opciones del producto ${product.name}"
                         >
                             <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24" aria-hidden="true">
@@ -624,7 +624,7 @@ async function submitStore() {
  * Find product by ID with normalized comparison
  */
 function findProductById(productId) {
-    if (productId == null) {
+    if (productId === null || productId === undefined) {
         return null;
     }
     const normalizedId = String(productId);
@@ -641,7 +641,7 @@ function openProductModal(productId = null) {
     }
     
     // Find product data if editing
-    const productData = productId != null ? findProductById(productId) : null;
+    const productData = productId !== null && productId !== undefined ? findProductById(productId) : null;
     
     const title = productData ? 'Editar' : 'Nuevo';
     const productIdLiteral = JSON.stringify(productId);
@@ -688,8 +688,9 @@ async function submitProduct(productId = null) {
     const price = document.getElementById('p-price').value;
     const saveBtn = document.getElementById('product-save-btn');
     
-    const product = productId != null ? findProductById(productId) : null;
-    if (productId != null && !product) {
+    const hasProductId = productId !== null && productId !== undefined;
+    const product = hasProductId ? findProductById(productId) : null;
+    if (hasProductId && !product) {
         return showToast('Producto no encontrado');
     }
     
