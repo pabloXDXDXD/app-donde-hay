@@ -334,26 +334,29 @@ function renderProducts() {
             'Usa el botón <b>+</b> para agregar tu primer producto.'
         );
     } else {
-        productsPage.innerHTML = PRODUCTS.map(product => `
-            <div class="card card-product">
-                <div style="flex:1;">
-                    <div class="name md-typescale-body-large">${product.name}</div>
-                    <div class="category md-typescale-body-small">${product.category || 'General'}</div>
+        productsPage.innerHTML = PRODUCTS.map(product => {
+            const productIdLiteral = JSON.stringify(product.id);
+            return `
+                <div class="card card-product">
+                    <div style="flex:1;">
+                        <div class="name md-typescale-body-large">${product.name}</div>
+                        <div class="category md-typescale-body-small">${product.category || 'General'}</div>
+                    </div>
+                    <div class="card-actions">
+                        <div class="price">${'$' + product.price}</div>
+                        <button 
+                            class="icon-btn" 
+                            onclick="showProductMenu(${productIdLiteral})"
+                            aria-label="Opciones del producto ${product.name}"
+                        >
+                            <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24" aria-hidden="true">
+                                <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
-                <div class="card-actions">
-                    <div class="price">${'$' + product.price}</div>
-                    <button 
-                        class="icon-btn" 
-                        onclick="showProductMenu(${product.id})"
-                        aria-label="Opciones del producto ${product.name}"
-                    >
-                        <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24" aria-hidden="true">
-                            <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
     }
 }
 
@@ -618,6 +621,17 @@ async function submitStore() {
 }
 
 /**
+ * Find product by ID with normalized comparison
+ */
+function findProductById(productId) {
+    if (productId === null || productId === undefined) {
+        return null;
+    }
+    const normalizedId = String(productId);
+    return PRODUCTS.find(p => String(p.id) === normalizedId);
+}
+
+/**
  * Open product modal for creating/editing product
  */
 function openProductModal(productId = null) {
@@ -627,9 +641,10 @@ function openProductModal(productId = null) {
     }
     
     // Find product data if editing
-    const productData = productId ? PRODUCTS.find(p => p.id === productId) : null;
+    const productData = productId !== null && productId !== undefined ? findProductById(productId) : null;
     
     const title = productData ? 'Editar' : 'Nuevo';
+    const productIdLiteral = JSON.stringify(productId);
     
     openModal(`
         <div class="modal-title md-typescale-headline-small">${title} Producto</div>
@@ -660,7 +675,7 @@ function openProductModal(productId = null) {
         </md-outlined-text-field>
         <div class="modal-actions">
             <md-text-button onclick="closeModal()">Cancelar</md-text-button>
-            <md-filled-button id="product-save-btn" onclick="submitProduct(${productId})">Guardar</md-filled-button>
+            <md-filled-button id="product-save-btn" onclick="submitProduct(${productIdLiteral})">Guardar</md-filled-button>
         </div>
     `);
 }
@@ -672,6 +687,12 @@ async function submitProduct(productId = null) {
     const name = document.getElementById('p-name').value.trim();
     const price = document.getElementById('p-price').value;
     const saveBtn = document.getElementById('product-save-btn');
+    
+    const hasProductId = productId !== null && productId !== undefined;
+    const product = hasProductId ? findProductById(productId) : null;
+    if (hasProductId && !product) {
+        return showToast('Producto no encontrado');
+    }
     
     if (!name || !price) {
         return showToast('Nombre y precio requeridos');
@@ -690,8 +711,8 @@ async function submitProduct(productId = null) {
         category: document.getElementById('p-cat').value.trim()
     };
     
-    const { error } = productId
-        ? await supabase.from('products').update(productData).eq('id', productId)
+    const { error } = product
+        ? await supabase.from('products').update(productData).eq('id', product.id)
         : await supabase.from('products').insert([productData]);
     
     if (error) {
@@ -712,7 +733,7 @@ async function submitProduct(productId = null) {
  * Show product options menu (bottom sheet)
  */
 function showProductMenu(productId) {
-    const product = PRODUCTS.find(p => p.id === productId);
+    const product = findProductById(productId);
     if (!product) {
         showToast('Producto no encontrado');
         return;
@@ -720,13 +741,13 @@ function showProductMenu(productId) {
     
     openBottomSheet(`
         <div class="bottom-sheet-title md-typescale-title-medium">${product.name}</div>
-        <button class="bottom-sheet-item md-typescale-body-large" onclick="openProductModal(${productId})">
+        <button class="bottom-sheet-item md-typescale-body-large" onclick="openProductModal(${JSON.stringify(product.id)})">
             <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
             </svg>
             Editar
         </button>
-        <button class="bottom-sheet-item md-typescale-body-large" onclick="deleteProduct(${product.id})">
+        <button class="bottom-sheet-item md-typescale-body-large" onclick="deleteProduct(${JSON.stringify(product.id)})">
             <svg viewBox="0 0 24 24" style="fill:var(--md-sys-color-error)" aria-hidden="true">
                 <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
             </svg>
@@ -745,13 +766,19 @@ async function deleteProduct(productId) {
     
     closeBottomSheet();
     
+    const product = findProductById(productId);
+    if (!product) {
+        showToast('Producto no encontrado');
+        return;
+    }
+    
     // Client-side ownership check for better UX (real security is enforced by Supabase RLS policies)
     if (!STORE || STORE.user_id !== USER_ID) {
         showToast('Error: No tienes permiso para eliminar este producto');
         return;
     }
     
-    const { error } = await supabase.from('products').delete().eq('id', productId);
+    const { error } = await supabase.from('products').delete().eq('id', product.id);
     
     if (error) {
         showToast(`Error: ${error.message}`);
