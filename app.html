@@ -52,6 +52,16 @@
             --spacing-8: 32px;
             --spacing-10: 40px;
             --spacing-12: 48px;
+            
+            /* M3 Elevation and shadows */
+            --md-sys-elevation-1: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 3px 1px rgba(0, 0, 0, 0.15);
+            --md-sys-elevation-2: 0 1px 2px rgba(0, 0, 0, 0.3), 0 2px 6px 2px rgba(0, 0, 0, 0.15);
+            --md-sys-elevation-3: 0 4px 8px 3px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.3);
+            
+            /* M3 State layers */
+            --md-sys-state-hover-opacity: 0.08;
+            --md-sys-state-focus-opacity: 0.12;
+            --md-sys-state-pressed-opacity: 0.12;
         }
         
         /* Global reset and base styles */
@@ -222,6 +232,7 @@
 
         /* M3 Button Components */
         .btn-filled {
+            position: relative;
             height: 40px;
             padding: 0 var(--spacing-6);
             background: var(--md-sys-color-primary);
@@ -232,11 +243,46 @@
             font-weight: 500;
             line-height: 20px;
             cursor: pointer;
+            box-shadow: var(--md-sys-elevation-1);
+            transition: box-shadow 0.2s cubic-bezier(0.2, 0, 0, 1), background-color 0.2s;
+            overflow: hidden;
             /* M3 Filled Button - for primary actions */
             /* M3 Label Large */
         }
         
+        .btn-filled::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: currentColor;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        
+        .btn-filled:hover::before {
+            opacity: var(--md-sys-state-hover-opacity);
+        }
+        
+        .btn-filled:focus::before {
+            opacity: var(--md-sys-state-focus-opacity);
+        }
+        
+        .btn-filled:active {
+            box-shadow: none;
+        }
+        
+        .btn-filled:active::before {
+            opacity: var(--md-sys-state-pressed-opacity);
+        }
+        
+        .btn-filled:disabled {
+            opacity: 0.38;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        
         .btn-text {
+            position: relative;
             height: 40px;
             padding: 0 var(--spacing-6);
             background: transparent;
@@ -246,8 +292,37 @@
             font-weight: 500;
             line-height: 20px;
             cursor: pointer;
+            border-radius: var(--spacing-5);
+            transition: background-color 0.2s;
+            overflow: hidden;
             /* M3 Text Button - for secondary/less prominent actions */
             /* M3 Label Large */
+        }
+        
+        .btn-text::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: currentColor;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        
+        .btn-text:hover::before {
+            opacity: var(--md-sys-state-hover-opacity);
+        }
+        
+        .btn-text:focus::before {
+            opacity: var(--md-sys-state-focus-opacity);
+        }
+        
+        .btn-text:active::before {
+            opacity: var(--md-sys-state-pressed-opacity);
+        }
+        
+        .btn-text:disabled {
+            opacity: 0.38;
+            cursor: not-allowed;
         }
         
         /* Top bar */
@@ -345,6 +420,12 @@
             margin-bottom: var(--spacing-3);
             display: flex;
             flex-direction: column;
+            box-shadow: var(--md-sys-elevation-1);
+            transition: box-shadow 0.2s cubic-bezier(0.2, 0, 0, 1);
+        }
+        
+        .card:hover {
+            box-shadow: var(--md-sys-elevation-2);
         }
         
         /* Empty state */
@@ -411,6 +492,7 @@
         
         /* Icon button */
         .icon-btn {
+            position: relative;
             background: none;
             border: none;
             color: var(--md-sys-color-on-surface-variant);
@@ -418,15 +500,30 @@
             border-radius: 50%;
             cursor: pointer;
             margin: calc(-1 * var(--spacing-2));
+            transition: background-color 0.2s cubic-bezier(0.2, 0, 0, 1);
             /* M3 Icon Button */
         }
         
-        .icon-btn:hover {
-            background: rgba(255, 255, 255, 0.08);
+        .icon-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: currentColor;
+            opacity: 0;
+            transition: opacity 0.2s;
         }
         
-        .icon-btn:active {
-            background: rgba(255, 255, 255, 0.12);
+        .icon-btn:hover::before {
+            opacity: var(--md-sys-state-hover-opacity);
+        }
+        
+        .icon-btn:focus::before {
+            opacity: var(--md-sys-state-focus-opacity);
+        }
+        
+        .icon-btn:active::before {
+            opacity: var(--md-sys-state-pressed-opacity);
         }
 
         /* M3 Floating Action Button (FAB) */
@@ -445,7 +542,8 @@
             justify-content: center;
             z-index: 50;
             cursor: pointer;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            box-shadow: var(--md-sys-elevation-3);
+            transition: box-shadow 0.2s cubic-bezier(0.2, 0, 0, 1);
             /* M3 FAB - for primary screen action */
         }
         
@@ -456,7 +554,11 @@
         }
         
         .fab:hover {
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 6px 10px 4px rgba(0, 0, 0, 0.15), 0 2px 3px rgba(0, 0, 0, 0.3);
+        }
+        
+        .fab:active {
+            box-shadow: var(--md-sys-elevation-2);
         }
 
         /* M3 Navigation Bar */
@@ -473,6 +575,7 @@
         }
         
         .nav-item {
+            position: relative;
             flex: 1;
             display: flex;
             flex-direction: column;
@@ -483,6 +586,7 @@
             border: none;
             color: var(--md-sys-color-on-surface-variant);
             cursor: pointer;
+            transition: color 0.2s;
         }
         
         .nav-icon {
@@ -492,7 +596,26 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: background-color 0.2s;
+            transition: background-color 0.2s cubic-bezier(0.2, 0, 0, 1);
+            position: relative;
+        }
+        
+        .nav-icon::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: var(--spacing-4);
+            background: currentColor;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        
+        .nav-item:hover .nav-icon::before {
+            opacity: var(--md-sys-state-hover-opacity);
+        }
+        
+        .nav-item:active .nav-icon::before {
+            opacity: var(--md-sys-state-pressed-opacity);
         }
         
         .nav-icon svg {
@@ -553,6 +676,19 @@
             padding: var(--spacing-6);
             width: 90%;
             max-width: 320px;
+            box-shadow: var(--md-sys-elevation-3);
+            animation: modalSlideIn 0.3s cubic-bezier(0.2, 0, 0, 1);
+        }
+        
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
         }
         
         .modal-title {
@@ -600,6 +736,7 @@
         }
         
         .bottom-sheet-item {
+            position: relative;
             display: flex;
             align-items: center;
             gap: var(--spacing-4);
@@ -614,11 +751,26 @@
             text-align: left;
             border-radius: var(--spacing-2);
             cursor: pointer;
+            transition: background-color 0.2s;
+            overflow: hidden;
             /* M3 Body Large */
         }
         
-        .bottom-sheet-item:active {
-            background: rgba(255, 255, 255, 0.05);
+        .bottom-sheet-item::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: currentColor;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        
+        .bottom-sheet-item:hover::before {
+            opacity: var(--md-sys-state-hover-opacity);
+        }
+        
+        .bottom-sheet-item:active::before {
+            opacity: var(--md-sys-state-pressed-opacity);
         }
         
         .bottom-sheet-item svg {
