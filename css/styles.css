@@ -56,6 +56,18 @@
     --md-sys-state-pressed-opacity: 0.12;
 }
 
+/* Material Web text field theme (dark) */
+md-outlined-text-field {
+    --md-outlined-field-input-text-color: var(--md-sys-color-on-background);
+    --md-outlined-field-caret-color: var(--md-sys-color-primary);
+    --md-outlined-field-label-text-color: var(--md-sys-color-on-surface-variant);
+    --md-outlined-field-focus-label-text-color: var(--md-sys-color-primary);
+    --md-outlined-field-container-color: var(--md-sys-color-surface-container);
+    --md-outlined-field-outline-color: var(--md-sys-color-outline);
+    --md-outlined-field-hover-outline-color: var(--md-sys-color-on-surface-variant);
+    --md-outlined-field-focus-outline-color: var(--md-sys-color-primary);
+}
+
 /* Global reset and base styles */
 * {
     margin: 0;
