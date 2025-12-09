@@ -685,6 +685,11 @@ async function submitProduct(productId = null) {
     const price = document.getElementById('p-price').value;
     const saveBtn = document.getElementById('product-save-btn');
     
+    const product = productId != null ? findProductById(productId) : null;
+    if (productId != null && !product) {
+        return showToast('Producto no encontrado');
+    }
+    
     if (!name || !price) {
         return showToast('Nombre y precio requeridos');
     }
@@ -702,8 +707,9 @@ async function submitProduct(productId = null) {
         category: document.getElementById('p-cat').value.trim()
     };
     
-    const { error } = productId
-        ? await supabase.from('products').update(productData).eq('id', productId)
+    const targetProductId = product ? product.id : productId;
+    const { error } = targetProductId
+        ? await supabase.from('products').update(productData).eq('id', targetProductId)
         : await supabase.from('products').insert([productData]);
     
     if (error) {
