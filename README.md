@@ -6,30 +6,47 @@ Este documento proporciona una descripción detallada de la arquitectura, funcio
 
 La aplicación es una Single-Page Application (SPA) que permite a los usuarios gestionar un inventario de productos y el perfil de su tienda. Está diseñada con un enfoque "offline-first", priorizando la experiencia del usuario al permitir el acceso a datos cacheados incluso sin conexión a internet.
 
-La interfaz de usuario intenta seguir los principios de **Material Design 3**, utilizando un tema oscuro personalizado.
+La interfaz de usuario sigue los principios de **Material Design 3**, utilizando un tema oscuro personalizado con:
+- Sistema de elevación con sombras apropiadas (3 niveles)
+- State layers para feedback interactivo (hover, focus, pressed)
+- Transiciones suaves con easing M3 estándar
+- Design tokens para consistencia visual
 
 ## 2. Tecnologías Utilizadas
 
 -   **Frontend**: HTML, CSS y JavaScript (Vanilla JS). No se utiliza ningún framework externo.
 -   **Backend & Base de Datos**: **Supabase** se encarga de la autenticación de usuarios y de la base de datos (PostgreSQL).
--   **Diseño**: **Material Design 3** (principios y paleta de colores).
+-   **Diseño**: **Material Design 3** con implementación personalizada (sin dependencias externas).
 -   **Entorno**: La aplicación está diseñada para ser ejecutada en un **WebView** dentro de una aplicación de Android (Sketchware Pro), como lo demuestra la comunicación con la interfaz nativa `Android.showToast()`.
 
 ## 3. Arquitectura de la Aplicación
 
 ### Single-Page Application (SPA)
 
-La aplicación completa reside en un único archivo `app.html`. La navegación entre las diferentes "vistas" (como inicio de sesión, menú principal, etc.) se gestiona dinámicamente con JavaScript, mostrando u ocultando el contenido correspondiente sin recargar la página.
+La aplicación es una SPA modular con separación de responsabilidades. La navegación entre las diferentes "vistas" (como inicio de sesión, menú principal, etc.) se gestiona dinámicamente con JavaScript, mostrando u ocultando el contenido correspondiente sin recargar la página.
 
-### Estructura del `app.html`
+### Estructura de Archivos
+
+```
+app-donde-hay/
+├── index.html          # Archivo HTML principal
+├── css/
+│   └── styles.css      # Estilos de Material Design 3
+├── js/
+│   └── main.js         # Lógica de la aplicación
+└── supabase.js         # Cliente de Supabase
+```
+
+### Estructura del `index.html`
 
 1.  **`<head>`**:
     *   **Metadatos**: Configuración del viewport para diseño responsivo.
     *   **Scripts**: Carga del cliente de Supabase (`supabase.js`).
-    *   **`<style>`**: Contiene todo el CSS de la aplicación:
-        *   **Variables de Color (`:root`)**: Define una paleta de colores basada en Material 3 (Tema Oscuro Azul).
+    *   **Estilos**: Enlace a `css/styles.css` que contiene:
+        *   **Variables de Color (`:root`)**: Paleta de colores Material 3 (Tema Oscuro Azul).
+        *   **Design Tokens M3**: Elevación, state layers, y espaciado.
         *   **Estilos Globales**: Reseteo de estilos, tipografía y colores de fondo.
-        *   **Componentes UI**: Estilos para vistas, botones, tarjetas, modales, menús inferiores (bottom sheets), barras de navegación, etc.
+        *   **Componentes UI**: Estilos para vistas, botones, tarjetas, modales, bottom sheets, barras de navegación, etc.
 
 2.  **`<body>`**:
     *   **Contenedores Principales**:
@@ -39,10 +56,9 @@ La aplicación completa reside en un único archivo `app.html`. La navegación e
     *   **Plantillas (`<template>`)**:
         *   Se usan las etiquetas `<template>` para definir la estructura HTML de las vistas principales (`login-view` y `menu-view`).
         *   Este enfoque es eficiente, ya que el navegador no renderiza el contenido de las plantillas hasta que se clonan y se añaden al DOM con JavaScript.
-    *   **`<script>`**:
-        *   Contiene toda la lógica de la aplicación.
+    *   **Script**: Carga de `js/main.js` como módulo ES6.
 
-### Lógica de JavaScript (`<script>`)
+### Lógica de JavaScript (`js/main.js`)
 
 La lógica principal se puede dividir en las siguientes áreas:
 

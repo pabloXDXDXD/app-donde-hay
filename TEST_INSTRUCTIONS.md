@@ -11,8 +11,7 @@ app-donde-hay/
 ├── js/
 │   └── main.js            # Toda la lógica JavaScript de la aplicación
 ├── index.html             # HTML principal con formularios nativos HTML
-├── supabase.js            # Cliente de Supabase
-└── app.html               # Archivo original (mantenido para referencia)
+└── supabase.js            # Cliente de Supabase
 ```
 
 ## Cambios Implementados
