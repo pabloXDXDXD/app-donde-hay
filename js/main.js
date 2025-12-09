@@ -529,7 +529,7 @@ function openStoreModal(storeData = null) {
             <input 
                 id="st-name" 
                 value="${storeData?.business_name || ''}" 
-                placeholder="Nombre del Negocio" 
+                placeholder=" " 
                 aria-label="Nombre del Negocio"
             />
             <label for="st-name">Nombre del Negocio</label>
@@ -538,7 +538,7 @@ function openStoreModal(storeData = null) {
             <input 
                 id="st-type" 
                 value="${storeData?.business_type || ''}" 
-                placeholder="Tipo (ej: Restaurante)" 
+                placeholder=" " 
                 aria-label="Tipo de Negocio"
             />
             <label for="st-type">Tipo de Negocio</label>
@@ -547,7 +547,7 @@ function openStoreModal(storeData = null) {
             <input 
                 id="st-phone" 
                 value="${storeData?.phone || ''}" 
-                placeholder="Teléfono" 
+                placeholder=" " 
                 aria-label="Teléfono"
             />
             <label for="st-phone">Teléfono</label>
@@ -556,7 +556,7 @@ function openStoreModal(storeData = null) {
             <input 
                 id="st-email" 
                 value="${storeData?.email || ''}" 
-                placeholder="Email" 
+                placeholder=" " 
                 aria-label="Email"
             />
             <label for="st-email">Email</label>
@@ -565,7 +565,7 @@ function openStoreModal(storeData = null) {
             <input 
                 id="st-address" 
                 value="${storeData?.address || ''}" 
-                placeholder="Dirección" 
+                placeholder=" " 
                 aria-label="Dirección"
             />
             <label for="st-address">Dirección</label>
@@ -643,7 +643,7 @@ function openProductModal(productId = null) {
         <div class="text-field">
             <input 
                 id="p-name" 
-                placeholder="Nombre" 
+                placeholder=" " 
                 value="${productData?.name || ''}" 
                 aria-label="Nombre del Producto"
             />
@@ -653,7 +653,7 @@ function openProductModal(productId = null) {
             <input 
                 id="p-price" 
                 type="number" 
-                placeholder="Precio" 
+                placeholder=" " 
                 value="${productData?.price || ''}" 
                 aria-label="Precio"
             />
@@ -662,7 +662,7 @@ function openProductModal(productId = null) {
         <div class="text-field">
             <input 
                 id="p-cat" 
-                placeholder="Categoría" 
+                placeholder=" " 
                 value="${productData?.category || ''}" 
                 aria-label="Categoría"
             />
