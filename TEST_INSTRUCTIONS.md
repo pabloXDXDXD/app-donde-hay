@@ -92,6 +92,25 @@ La aplicación debe mantener toda la funcionalidad original:
 
 ## Notas Importantes
 
-1. Los archivos de Material 3 (`material-all.js` y `material-styles.js`) dependen de imports desde CDN de jsDelivr
-2. Se requiere conexión a internet para que los componentes de Material 3 funcionen correctamente
-3. El archivo `app.html` original se mantiene en el repositorio para referencia
+1. **Material 3 Web Components**: Los archivos de Material 3 (`material-all.js` y `material-styles.js`) dependen de imports desde CDN de jsDelivr mediante un import map.
+2. **Conexión a Internet**: Se requiere conexión a internet para que los componentes de Material 3 funcionen correctamente en la primera carga.
+3. **Modo Offline**: El CSS y la lógica JavaScript funcionan offline. Los datos previamente cacheados se pueden visualizar sin conexión.
+4. **Archivo Original**: El archivo `app.html` original se mantiene en el repositorio para referencia.
+
+## Cambios Recientes (Diciembre 2025)
+
+### ✅ Correcciones Aplicadas
+
+1. **Login y Registro**: 
+   - Las funciones `handleLogin`, `handleRegister` y `showSubView` ahora están expuestas globalmente.
+   - El cambio entre las vistas de login y registro funciona correctamente.
+   - Los formularios de autenticación son completamente funcionales.
+
+2. **Estilos Offline**:
+   - Los estilos CSS (`css/styles.css`) se cargan correctamente sin conexión.
+   - La aplicación mantiene su apariencia visual incluso sin Material Web Components.
+   - Los datos cacheados se pueden visualizar con el estilo apropiado.
+
+3. **Documentación**:
+   - README.md actualizado con información clara sobre capacidades offline.
+   - Instrucciones de prueba actualizadas.

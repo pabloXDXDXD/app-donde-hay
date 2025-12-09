@@ -117,3 +117,25 @@ La comunicación entre el WebView y la aplicación nativa de Android se realiza 
 ### Seguridad
 -   Las verificaciones de propiedad del lado del cliente (en `deleteStore()` y `deleteProduct()`) son para mejorar la UX, mostrando mensajes de error apropiados antes de realizar peticiones.
 -   La seguridad real se implementa a través de las políticas de Row Level Security (RLS) de Supabase en el backend.
+
+### Login y Registro (Diciembre 2025)
+-   **Problema resuelto**: Las funciones de login (`handleLogin`), registro (`handleRegister`) y cambio de vista (`showSubView`) ahora están expuestas globalmente en el objeto `window`.
+-   Esto permite que los manejadores de eventos `onclick` en las plantillas HTML funcionen correctamente.
+-   El flujo completo de autenticación ahora funciona sin errores en el navegador.
+
+### Funcionalidad Offline
+La aplicación tiene capacidades offline limitadas:
+
+**✅ Funciona sin conexión:**
+-   Estilos CSS locales (todos los estilos de `css/styles.css`)
+-   Lógica JavaScript de la aplicación (`js/main.js`)
+-   Navegación y gestión de caché de datos
+-   Visualización de datos cacheados previamente
+-   Cliente de Supabase (`supabase.js`)
+
+**❌ Requiere conexión a internet:**
+-   **Material 3 Web Components**: Los componentes de Material Design (`<md-outlined-text-field>`, `<md-filled-button>`, etc.) requieren dependencias de CDN.
+-   Las dependencias de Lit (`/npm/lit@3.3.1/+esm`) se cargan desde jsDelivr.
+-   **Backend Supabase**: Las operaciones de base de datos y autenticación requieren conectividad.
+
+**Recomendación**: Para uso en entornos sin conexión garantizada, considere usar elementos HTML nativos (`<input>`, `<button>`, etc.) en lugar de Material Web Components, o descargue todas las dependencias de Lit localmente.
