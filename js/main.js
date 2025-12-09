@@ -624,7 +624,10 @@ async function submitStore() {
  * Find product by ID with normalized comparison
  */
 function findProductById(productId) {
-    const normalizedId = productId != null ? String(productId) : '';
+    if (productId == null) {
+        return null;
+    }
+    const normalizedId = String(productId);
     return PRODUCTS.find(p => String(p.id) === normalizedId);
 }
 
@@ -707,9 +710,8 @@ async function submitProduct(productId = null) {
         category: document.getElementById('p-cat').value.trim()
     };
     
-    const targetProductId = product ? product.id : productId;
-    const { error } = targetProductId
-        ? await supabase.from('products').update(productData).eq('id', targetProductId)
+    const { error } = product
+        ? await supabase.from('products').update(productData).eq('id', product.id)
         : await supabase.from('products').insert([productData]);
     
     if (error) {
