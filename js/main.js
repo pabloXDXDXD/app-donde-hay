@@ -274,7 +274,7 @@ function renderStore() {
             <div class="card" style="position:relative;">
                 <button 
                     class="icon-btn" 
-                    onclick="openStoreModal(STORE)" 
+                    onclick="openStoreModal()" 
                     style="position:absolute;top:12px;right:12px;"
                     aria-label="Editar tienda"
                 >
@@ -516,6 +516,11 @@ function closeBottomSheet() {
  * Open store modal for creating/editing store
  */
 function openStoreModal(storeData = null) {
+    // If no storeData provided but STORE exists, use STORE for editing
+    if (!storeData && STORE) {
+        storeData = STORE;
+    }
+    
     const title = storeData ? 'Editar' : 'Crear';
     
     openModal(`
