@@ -3,6 +3,7 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let USER_ID = null, STORE = null, PRODUCTS = [], networkMonitorInterval = null;
 let IS_LOADING_ONLINE = false, LAST_SYNC_FROM_CACHE = false, PENDING_SYNC_COUNT = 0;
+const SKELETON_PLACEHOLDER_COUNT = 6;
 
 document.addEventListener('DOMContentLoaded', async () => {
     const app = document.getElementById('app-container');
@@ -232,7 +233,7 @@ async function refreshData() {
 
     if (!navigator.onLine) {
         LAST_SYNC_FROM_CACHE = true;
-        PENDING_SYNC_COUNT = PRODUCTS.length;
+        PENDING_SYNC_COUNT = 0;
         IS_LOADING_ONLINE = false;
         renderAllUI();
         return;
@@ -279,7 +280,7 @@ async function refreshData() {
     } catch (error) {
         console.error('Error refreshing data:', error);
         LAST_SYNC_FROM_CACHE = true;
-        PENDING_SYNC_COUNT = PRODUCTS.length;
+        PENDING_SYNC_COUNT = 0;
         showToast('No se pudo cargar la información en línea.');
     } finally {
         IS_LOADING_ONLINE = false;
@@ -363,11 +364,12 @@ function renderProducts() {
     }
 
     const renderBanner = () => {
-        const hasPending = PENDING_SYNC_COUNT > 0 || LAST_SYNC_FROM_CACHE;
-        const baseMessage = PENDING_SYNC_COUNT > 0
-            ? `${PENDING_SYNC_COUNT} producto${PENDING_SYNC_COUNT === 1 ? '' : 's'} sin sincronizar`
+        const unsyncedCount = LAST_SYNC_FROM_CACHE ? PRODUCTS.length : PENDING_SYNC_COUNT;
+        const hasPending = unsyncedCount > 0 || LAST_SYNC_FROM_CACHE;
+        const baseMessage = unsyncedCount > 0
+            ? `${unsyncedCount} producto${unsyncedCount === 1 ? '' : 's'} sin sincronizar`
             : (LAST_SYNC_FROM_CACHE ? 'Productos en caché (sin conexión)' : 'Productos sincronizados');
-        const detail = PENDING_SYNC_COUNT > 0
+        const detail = unsyncedCount > 0
             ? 'Se guardarán en cuanto recuperemos la conexión.'
             : (LAST_SYNC_FROM_CACHE ? 'Mostrando los últimos datos guardados.' : 'Todos los datos están al día.');
         const toneClass = hasPending ? 'sync-banner warning' : 'sync-banner success';
@@ -380,7 +382,7 @@ function renderProducts() {
     };
 
     const renderSkeletons = () => {
-        const placeholders = Array.from({ length: 6 }).map(() => `
+        const placeholders = Array.from({ length: SKELETON_PLACEHOLDER_COUNT }).map(() => `
             <div class="card card-product skeleton-card">
                 <div class="skeleton-line" style="width:70%;"></div>
                 <div class="skeleton-line short"></div>
