@@ -493,6 +493,64 @@ body {
     box-shadow: var(--md-sys-elevation-2);
 }
 
+.sync-banner {
+    border: 1px solid transparent;
+}
+
+.sync-banner.success {
+    background: var(--md-sys-color-secondary-container);
+    color: var(--md-sys-color-on-secondary-container);
+    border-color: color-mix(in srgb, var(--md-sys-color-secondary-container) 80%, var(--md-sys-color-secondary));
+}
+
+.sync-banner.warning {
+    background: var(--md-sys-color-error-container);
+    color: var(--md-sys-color-on-error-container);
+    border-color: color-mix(in srgb, var(--md-sys-color-error-container) 80%, var(--md-sys-color-error));
+}
+
+.skeleton-card {
+    position: relative;
+    overflow: hidden;
+    gap: var(--spacing-2);
+}
+
+.skeleton-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+    transform: translateX(-100%);
+    animation: shimmer 1.1s infinite;
+}
+
+.skeleton-line {
+    height: 14px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--md-sys-color-outline-variant) 40%, transparent);
+}
+
+.skeleton-line.short {
+    width: 50%;
+}
+
+.skeleton-line.price {
+    width: 56px;
+    height: 18px;
+}
+
+.skeleton-line.icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+}
+
+@keyframes shimmer {
+    100% {
+        transform: translateX(100%);
+    }
+}
+
 /* Empty state */
 .empty-state {
     grid-column: 1 / -1;

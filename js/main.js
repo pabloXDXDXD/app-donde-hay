@@ -2,6 +2,7 @@ const SUPABASE_URL = 'https://ozivukumwofkhpruzoig.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im96aXZ1a3Vtd29ma2hwcnV6b2lnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE4NTIzMjQsImV4cCI6MjA3NzQyODMyNH0.GgT7ssx4NXXDPb1tXyuRjpM1yi245Gf62gAjx7jTBcg';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let USER_ID = null, STORE = null, PRODUCTS = [], networkMonitorInterval = null;
+let IS_LOADING_ONLINE = false, LAST_SYNC_FROM_CACHE = false, PENDING_SYNC_COUNT = 0;
 
 document.addEventListener('DOMContentLoaded', async () => {
     const app = document.getElementById('app-container');
@@ -171,6 +172,8 @@ async function handleLogout() {
     } finally {
         localStorage.removeItem('session_token');
         localStorage.removeItem('user_id');
+        localStorage.removeItem('store_cache');
+        localStorage.removeItem('products_cache');
         STORE = null;
         PRODUCTS = [];
     }
@@ -188,14 +191,35 @@ function initializeMenu() {
 }
 
 /**
- * Clear legacy cache and reset in-memory data
+ * Load cached store/products for offline usage
  */
 function loadCache() {
-    // Remove legacy offline caches and reset in-memory data
-    localStorage.removeItem('store_cache');
-    localStorage.removeItem('products_cache');
-    STORE = null;
-    PRODUCTS = [];
+    const cachedUserId = localStorage.getItem('user_id');
+    if (cachedUserId !== USER_ID) {
+        localStorage.removeItem('store_cache');
+        localStorage.removeItem('products_cache');
+        STORE = null;
+        PRODUCTS = [];
+        return;
+    }
+
+    const parseCache = (key) => {
+        const raw = localStorage.getItem(key);
+        if (!raw || raw === 'null' || raw === 'undefined') {
+            return null;
+        }
+        try {
+            return JSON.parse(raw);
+        } catch {
+            return null;
+        }
+    };
+
+    const cachedStore = parseCache('store_cache');
+    const cachedProducts = parseCache('products_cache');
+
+    STORE = cachedStore || null;
+    PRODUCTS = Array.isArray(cachedProducts) ? cachedProducts : [];
 }
 
 /**
@@ -207,12 +231,16 @@ async function refreshData() {
     }
 
     if (!navigator.onLine) {
-        STORE = null;
-        PRODUCTS = [];
+        LAST_SYNC_FROM_CACHE = true;
+        PENDING_SYNC_COUNT = PRODUCTS.length;
+        IS_LOADING_ONLINE = false;
         renderAllUI();
         return;
     }
-    
+
+    IS_LOADING_ONLINE = true;
+    renderAllUI();
+
     try {
         // Fetch store request
         const { data: storeData, error: storeError } = await supabase
@@ -243,14 +271,22 @@ async function refreshData() {
         } else {
             PRODUCTS = [];
         }
+
+        localStorage.setItem('store_cache', JSON.stringify(STORE));
+        localStorage.setItem('products_cache', JSON.stringify(PRODUCTS));
+        LAST_SYNC_FROM_CACHE = false;
+        PENDING_SYNC_COUNT = 0;
         
         renderAllUI();
     } catch (error) {
         console.error('Error refreshing data:', error);
-        STORE = null;
-        PRODUCTS = [];
+        LAST_SYNC_FROM_CACHE = true;
+        PENDING_SYNC_COUNT = PRODUCTS.length;
         renderAllUI();
         showToast('No se pudo cargar la información en línea.');
+    } finally {
+        IS_LOADING_ONLINE = false;
+        renderAllUI();
     }
 }
 
@@ -328,7 +364,38 @@ function renderProducts() {
     if (!productsPage) {
         return;
     }
-    
+
+    const renderBanner = () => {
+        const hasPending = PENDING_SYNC_COUNT > 0 || LAST_SYNC_FROM_CACHE;
+        const baseMessage = PENDING_SYNC_COUNT > 0
+            ? `${PENDING_SYNC_COUNT} producto${PENDING_SYNC_COUNT === 1 ? '' : 's'} sin sincronizar`
+            : (LAST_SYNC_FROM_CACHE ? 'Productos en caché (sin conexión)' : 'Productos sincronizados');
+        const detail = PENDING_SYNC_COUNT > 0
+            ? 'Se guardarán en cuanto recuperemos la conexión.'
+            : (LAST_SYNC_FROM_CACHE ? 'Mostrando los últimos datos guardados.' : 'Todos los datos están al día.');
+        const toneClass = hasPending ? 'sync-banner warning' : 'sync-banner success';
+        return `
+            <div class="card ${toneClass}">
+                <div class="md-typescale-title-small">${baseMessage}</div>
+                <p class="md-typescale-body-small" style="margin-top:4px;">${detail}</p>
+            </div>
+        `;
+    };
+
+    const renderSkeletons = () => {
+        const placeholders = Array.from({ length: 6 }).map(() => `
+            <div class="card card-product skeleton-card">
+                <div class="skeleton-line" style="width:70%;"></div>
+                <div class="skeleton-line short"></div>
+                <div class="card-actions" style="margin-top:auto;">
+                    <div class="skeleton-line price"></div>
+                    <div class="skeleton-line icon"></div>
+                </div>
+            </div>
+        `).join('');
+        return placeholders;
+    };
+
     if (!STORE || STORE.status !== 'approved') {
         productsPage.innerHTML = renderEmptyState(
             'lock',
@@ -338,14 +405,16 @@ function renderProducts() {
             "navigateTo('store-page',document.querySelector('[data-page=store-page]'))",
             true
         );
+    } else if (IS_LOADING_ONLINE) {
+        productsPage.innerHTML = renderBanner() + renderSkeletons();
     } else if (PRODUCTS.length === 0) {
-        productsPage.innerHTML = renderEmptyState(
+        productsPage.innerHTML = renderBanner() + renderEmptyState(
             'inventory_2',
             'Sin Productos',
             'Usa el botón <b>+</b> para agregar tu primer producto.'
         );
     } else {
-        productsPage.innerHTML = PRODUCTS.map(product => {
+        productsPage.innerHTML = renderBanner() + PRODUCTS.map(product => {
             const productIdLiteral = JSON.stringify(product.id);
             return `
                 <div class="card card-product">
