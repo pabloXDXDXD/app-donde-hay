@@ -210,7 +210,7 @@ function loadCache() {
         }
         try {
             return JSON.parse(raw);
-        } catch {
+        } catch (error) {
             return null;
         }
     };
@@ -276,13 +276,10 @@ async function refreshData() {
         localStorage.setItem('products_cache', JSON.stringify(PRODUCTS));
         LAST_SYNC_FROM_CACHE = false;
         PENDING_SYNC_COUNT = 0;
-        
-        renderAllUI();
     } catch (error) {
         console.error('Error refreshing data:', error);
         LAST_SYNC_FROM_CACHE = true;
         PENDING_SYNC_COUNT = PRODUCTS.length;
-        renderAllUI();
         showToast('No se pudo cargar la información en línea.');
     } finally {
         IS_LOADING_ONLINE = false;
