@@ -232,7 +232,7 @@ async function refreshData() {
 
     if (!navigator.onLine) {
         LAST_SYNC_FROM_CACHE = true;
-        PENDING_SYNC_COUNT = 0;
+        PENDING_SYNC_COUNT = PRODUCTS.length;
         IS_LOADING_ONLINE = false;
         renderAllUI();
         return;
@@ -279,7 +279,7 @@ async function refreshData() {
     } catch (error) {
         console.error('Error refreshing data:', error);
         LAST_SYNC_FROM_CACHE = true;
-        PENDING_SYNC_COUNT = 0;
+        PENDING_SYNC_COUNT = PRODUCTS.length;
         showToast('No se pudo cargar la información en línea.');
     } finally {
         IS_LOADING_ONLINE = false;
