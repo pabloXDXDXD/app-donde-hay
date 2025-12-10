@@ -58,14 +58,15 @@
 
 /* Material Web text field theme (dark) */
 md-outlined-text-field {
-    --md-outlined-field-input-text-color: var(--md-sys-color-on-background);
-    --md-outlined-field-caret-color: var(--md-sys-color-primary);
-    --md-outlined-field-label-text-color: var(--md-sys-color-on-surface-variant);
-    --md-outlined-field-focus-label-text-color: var(--md-sys-color-primary);
-    --md-outlined-field-container-color: var(--md-sys-color-surface-container);
-    --md-outlined-field-outline-color: var(--md-sys-color-outline);
-    --md-outlined-field-hover-outline-color: var(--md-sys-color-on-surface-variant);
-    --md-outlined-field-focus-outline-color: var(--md-sys-color-primary);
+    --md-outlined-text-field-input-text-color: var(--md-sys-color-on-background);
+    --md-outlined-text-field-focus-input-text-color: var(--md-sys-color-on-background);
+    --md-outlined-text-field-caret-color: var(--md-sys-color-primary);
+    --md-outlined-text-field-label-text-color: var(--md-sys-color-on-surface-variant);
+    --md-outlined-text-field-focus-label-text-color: var(--md-sys-color-primary);
+    --md-outlined-text-field-container-color: var(--md-sys-color-surface-container);
+    --md-outlined-text-field-outline-color: var(--md-sys-color-outline);
+    --md-outlined-text-field-hover-outline-color: var(--md-sys-color-on-surface-variant);
+    --md-outlined-text-field-focus-outline-color: var(--md-sys-color-primary);
 }
 
 /* Global reset and base styles */
@@ -544,40 +545,20 @@ body {
     margin-top: var(--spacing-3);
 }
 
-/* Icon button */
-.icon-btn {
-    position: relative;
-    background: none;
-    border: none;
+/* M3 Icon Button (Material Web) */
+md-icon-button {
+    --md-icon-button-icon-color: var(--md-sys-color-on-surface-variant);
+    --md-icon-button-hover-state-layer-color: var(--md-sys-color-on-surface-variant);
+    --md-icon-button-pressed-state-layer-color: var(--md-sys-color-on-surface-variant);
+    --md-icon-button-hover-state-layer-opacity: var(--md-sys-state-hover-opacity);
+    --md-icon-button-pressed-state-layer-opacity: var(--md-sys-state-pressed-opacity);
+    --md-icon-button-focus-icon-color: var(--md-sys-color-on-surface);
     color: var(--md-sys-color-on-surface-variant);
-    padding: var(--spacing-2);
-    border-radius: 50%;
-    cursor: pointer;
-    margin: calc(-1 * var(--spacing-2));
-    transition: background-color 0.2s cubic-bezier(0.2, 0, 0, 1);
-    /* M3 Icon Button */
 }
 
-.icon-btn::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: 50%;
-    background: currentColor;
-    opacity: 0;
-    transition: opacity 0.2s;
-}
-
-.icon-btn:hover::before {
-    opacity: var(--md-sys-state-hover-opacity);
-}
-
-.icon-btn:focus::before {
-    opacity: var(--md-sys-state-focus-opacity);
-}
-
-.icon-btn:active::before {
-    opacity: var(--md-sys-state-pressed-opacity);
+md-icon-button svg {
+    width: 24px;
+    height: 24px;
 }
 
 /* M3 Floating Action Button (FAB) */
