@@ -78,10 +78,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (newSession) {
                 localStorage.setItem('session_token', newSession.access_token);
                 localStorage.setItem('user_id', newSession.user.id);
+                STORE = null;
+                PRODUCTS = [];
             } else {
                 // Clear token on logout
                 localStorage.removeItem('session_token');
                 localStorage.removeItem('user_id');
+                STORE = null;
+                PRODUCTS = [];
             }
             initializeView(newSession);
         }
@@ -167,6 +171,8 @@ async function handleLogout() {
     } finally {
         localStorage.removeItem('session_token');
         localStorage.removeItem('user_id');
+        STORE = null;
+        PRODUCTS = [];
     }
 }
 
@@ -182,28 +188,14 @@ function initializeMenu() {
 }
 
 /**
- * Load cached data from localStorage
+ * Clear legacy cache and reset in-memory data
  */
 function loadCache() {
-    const storeCache = localStorage.getItem('store_cache');
-    if (storeCache && storeCache !== 'null' && storeCache !== 'undefined') {
-        try {
-            STORE = JSON.parse(storeCache);
-        } catch (e) {
-            console.error('Error parsing store cache:', e);
-            localStorage.removeItem('store_cache');
-        }
-    }
-    
-    const productsCache = localStorage.getItem('products_cache');
-    if (productsCache && productsCache !== 'null' && productsCache !== 'undefined') {
-        try {
-            PRODUCTS = JSON.parse(productsCache);
-        } catch (e) {
-            console.error('Error parsing products cache:', e);
-            localStorage.removeItem('products_cache');
-        }
-    }
+    // Remove legacy offline caches and reset in-memory data
+    localStorage.removeItem('store_cache');
+    localStorage.removeItem('products_cache');
+    STORE = null;
+    PRODUCTS = [];
 }
 
 /**
@@ -213,32 +205,53 @@ async function refreshData() {
     if (!USER_ID) {
         return;
     }
-    
-    // Fetch store request
-    const { data: storeData } = await supabase
-        .from('store_requests')
-        .select('*')
-        .eq('user_id', USER_ID)
-        .maybeSingle();
-    
-    STORE = storeData;
-    localStorage.setItem('store_cache', JSON.stringify(storeData));
-    
-    // Fetch products if store is approved
-    if (STORE?.status === 'approved') {
-        const { data: productsData } = await supabase
-            .from('products')
-            .select('*')
-            .eq('store_id', STORE.id)
-            .order('name', { ascending: true });
-        
-        PRODUCTS = productsData || [];
-    } else {
+
+    if (!navigator.onLine) {
+        STORE = null;
         PRODUCTS = [];
+        renderAllUI();
+        return;
     }
     
-    localStorage.setItem('products_cache', JSON.stringify(PRODUCTS));
-    renderAllUI();
+    try {
+        // Fetch store request
+        const { data: storeData, error: storeError } = await supabase
+            .from('store_requests')
+            .select('*')
+            .eq('user_id', USER_ID)
+            .maybeSingle();
+
+        if (storeError) {
+            throw storeError;
+        }
+
+        STORE = storeData || null;
+        
+        // Fetch products if store is approved
+        if (STORE?.status === 'approved') {
+            const { data: productsData, error: productsError } = await supabase
+                .from('products')
+                .select('*')
+                .eq('store_id', STORE.id)
+                .order('name', { ascending: true });
+            
+            if (productsError) {
+                throw productsError;
+            }
+
+            PRODUCTS = productsData || [];
+        } else {
+            PRODUCTS = [];
+        }
+        
+        renderAllUI();
+    } catch (error) {
+        console.error('Error refreshing data:', error);
+        STORE = null;
+        PRODUCTS = [];
+        renderAllUI();
+        showToast('No se pudo cargar la información en línea.');
+    }
 }
 
 /**
@@ -278,9 +291,7 @@ function renderStore() {
                     aria-label="Editar tienda"
                     touch-target="wrapper"
                 >
-                    <svg slot="icon" viewBox="0 0 24 24" fill="currentColor" width="24" height="24" aria-hidden="true">
-                        <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
-                    </svg>
+                    ${renderIcon('../edit_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg', 24, 'slot="icon"')}
                 </md-icon-button>
                 <h2 class="md-typescale-title-medium" style="color:var(--md-sys-color-primary);padding-right:40px;">
                     ${STORE.business_name}
@@ -349,9 +360,7 @@ function renderProducts() {
                             aria-label="Opciones del producto ${product.name}"
                             touch-target="wrapper"
                         >
-                            <svg slot="icon" viewBox="0 0 24 24" fill="currentColor" width="24" height="24" aria-hidden="true">
-                                <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
-                            </svg>
+                            ${renderIcon('../more_vert_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg', 24, 'slot="icon"')}
                         </md-icon-button>
                     </div>
                 </div>
@@ -373,10 +382,8 @@ function renderSettings() {
     const deleteStoreSection = STORE ? `
         <div class="card" onclick="confirmDeleteStore()" style="cursor:pointer;margin-bottom:16px;">
             <div style="display:flex;align-items:center;gap:16px;">
-                <div style="width:40px;height:40px;background:var(--md-sys-color-error-container);border-radius:50%;display:flex;align-items:center;justify-content:center;">
-                    <svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:var(--md-sys-color-error);" aria-hidden="true">
-                        <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
-                    </svg>
+                <div style="width:40px;height:40px;background:var(--md-sys-color-error-container);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--md-sys-color-error);">
+                    ${renderIcon('../delete_forever_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg', 20)}
                 </div>
                 <div class="md-typescale-body-large" style="color:var(--md-sys-color-error);font-weight:500;">
                     Eliminar Tienda
@@ -389,10 +396,8 @@ function renderSettings() {
         ${deleteStoreSection}
         <div class="card" onclick="handleLogout()" style="cursor:pointer;">
             <div style="display:flex;align-items:center;gap:16px;">
-                <div style="width:40px;height:40px;background:var(--md-sys-color-error-container);border-radius:50%;display:flex;align-items:center;justify-content:center;">
-                    <svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:var(--md-sys-color-error);" aria-hidden="true">
-                        <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
-                    </svg>
+                <div style="width:40px;height:40px;background:var(--md-sys-color-error-container);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--md-sys-color-error);">
+                    ${renderIcon('../logout_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg', 20)}
                 </div>
                 <div class="md-typescale-body-large" style="color:var(--md-sys-color-error);font-weight:500;">
                     Cerrar Sesión
@@ -402,16 +407,21 @@ function renderSettings() {
     `;
 }
 
+function renderIcon(path, size = 24, extraAttrs = '') {
+    const attrs = extraAttrs ? ` ${extraAttrs}` : '';
+    return `<span class="icon" style="--icon-url:url('${path}');width:${size}px;height:${size}px;" aria-hidden="true"${attrs}></span>`;
+}
+
 /**
  * Render empty state component
  */
 function renderEmptyState(iconType, title, subtitle, buttonText, buttonAction, isSecondaryButton) {
     const icons = {
-        storefront: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 4H4v2h16V4zm1 10v-2l-1-5H4l-1 5v2h1v6h10v-6h4v6h2v-6h1zm-9 4H6v-4h6v4z"/></svg>',
-        inventory_2: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 2H4c-1 0-2 .9-2 2v3.01c0 .72.43 1.34 1 1.69V20c0 1.1 1.1 2 2 2h14c.9 0 2-.9 2-2V8.7c.57-.35 1-.97 1-1.69V4c0-1.1-1-2-2-2zm-5 12H9v-2h6v2zm5-7H4V4h16v3z"/></svg>',
-        lock: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C9.24 2 7 4.24 7 7v3H6c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-8c0-1.1-.9-2-2-2h-1V7c0-2.76-2.24-5-5-5zm0 2c1.66 0 3 1.34 3 3v3H9V7c0-1.66 1.34-3 3-3z"/></svg>',
-        pending: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>',
-        error: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>'
+        storefront: renderIcon('../storefront_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg', 48),
+        inventory_2: renderIcon('../inventory_2_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg', 48),
+        lock: renderIcon('../block_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg', 48),
+        pending: renderIcon('../package_2_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg', 48),
+        error: renderIcon('../delete_forever_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg', 48)
     };
     
     const buttonTag = isSecondaryButton ? 'md-filled-tonal-button' : 'md-filled-button';
@@ -504,8 +514,13 @@ function closeModal() {
  */
 function openBottomSheet(html) {
     const overlay = document.getElementById('bottom-sheet-menu');
+    if (!overlay) {
+        console.warn('Bottom sheet overlay not found');
+        return false;
+    }
     overlay.innerHTML = `<div class="bottom-sheet-content" onclick="event.stopPropagation()">${html}</div>`;
     overlay.classList.add('active');
+    return true;
 }
 
 /**
@@ -513,6 +528,9 @@ function openBottomSheet(html) {
  */
 function closeBottomSheet() {
     const overlay = document.getElementById('bottom-sheet-menu');
+    if (!overlay) {
+        return;
+    }
     overlay.classList.remove('active');
 }
 
@@ -739,21 +757,29 @@ function showProductMenu(productId) {
         return;
     }
     
-    openBottomSheet(`
+    const menuHtml = `
         <div class="bottom-sheet-title md-typescale-title-medium">${product.name}</div>
         <button class="bottom-sheet-item md-typescale-body-large" onclick="openProductModal(${JSON.stringify(product.id)})" aria-label="Editar ${product.name}">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
-            </svg>
+            ${renderIcon('../edit_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg')}
             Editar
         </button>
-        <button class="bottom-sheet-item md-typescale-body-large" onclick="deleteProduct(${JSON.stringify(product.id)})" aria-label="Eliminar ${product.name}">
-            <svg viewBox="0 0 24 24" style="fill:var(--md-sys-color-error)" aria-hidden="true">
-                <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
-            </svg>
-            <span style="color:var(--md-sys-color-error)">Eliminar</span>
+        <button class="bottom-sheet-item md-typescale-body-large" style="color:var(--md-sys-color-error);" onclick="deleteProduct(${JSON.stringify(product.id)})" aria-label="Eliminar ${product.name}">
+            ${renderIcon('../delete_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg')}
+            <span>Eliminar</span>
         </button>
-    `);
+    `;
+
+    const opened = openBottomSheet(menuHtml);
+    if (!opened) {
+        openModal(`
+            <div class="modal-title md-typescale-headline-small">${product.name}</div>
+            <div class="modal-actions" style="justify-content: space-between; width: 100%;">
+                <md-text-button onclick="closeModal()">Cerrar</md-text-button>
+                <md-filled-tonal-button style="color:var(--md-sys-color-error);" onclick="closeModal(); deleteProduct(${JSON.stringify(product.id)})">Eliminar</md-filled-tonal-button>
+                <md-filled-button onclick="closeModal(); openProductModal(${JSON.stringify(product.id)})">Editar</md-filled-button>
+            </div>
+        `);
+    }
 }
 
 /**

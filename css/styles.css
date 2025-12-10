@@ -88,6 +88,16 @@ body {
     color: var(--md-sys-color-on-background);
 }
 
+.icon {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    background-color: currentColor;
+    mask: var(--icon-url) center / contain no-repeat;
+    -webkit-mask: var(--icon-url) center / contain no-repeat;
+    flex-shrink: 0;
+}
+
 /* Splash screen */
 #splash-screen {
     position: fixed;
@@ -176,10 +186,10 @@ body {
     margin-bottom: var(--spacing-10);
 }
 
-.auth-header svg {
+.auth-header .icon {
     width: 64px;
     height: 64px;
-    fill: var(--md-sys-color-primary);
+    color: var(--md-sys-color-primary);
     margin-bottom: var(--spacing-4);
 }
 
@@ -491,10 +501,9 @@ body {
     color: var(--md-sys-color-on-surface-variant);
 }
 
-.empty-state svg {
+.empty-state .icon {
     width: var(--spacing-12);
     height: var(--spacing-12);
-    fill: currentColor;
     margin-bottom: var(--spacing-4);
 }
 
@@ -556,7 +565,7 @@ md-icon-button {
     color: var(--md-sys-color-on-surface-variant);
 }
 
-md-icon-button svg {
+md-icon-button .icon {
     width: 24px;
     height: 24px;
 }
@@ -582,10 +591,9 @@ md-icon-button svg {
     /* M3 FAB - for primary screen action */
 }
 
-.fab svg {
+.fab .icon {
     width: 24px;
     height: 24px;
-    fill: currentColor;
 }
 
 .fab:hover {
@@ -653,10 +661,9 @@ md-icon-button svg {
     opacity: var(--md-sys-state-pressed-opacity);
 }
 
-.nav-icon svg {
+.nav-icon .icon {
     width: 24px;
     height: 24px;
-    fill: currentColor;
 }
 
 .nav-item.active .nav-icon {
@@ -808,10 +815,9 @@ md-icon-button svg {
     opacity: var(--md-sys-state-pressed-opacity);
 }
 
-.bottom-sheet-item svg {
+.bottom-sheet-item .icon {
     width: 24px;
     height: 24px;
-    fill: currentColor;
 }
 
 /* Material Design 3 Text Field Styles (Outlined) */
