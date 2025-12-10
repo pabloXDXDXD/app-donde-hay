@@ -4,6 +4,10 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let USER_ID = null, STORE = null, PRODUCTS = [], networkMonitorInterval = null;
 let IS_LOADING_ONLINE = false, LAST_SYNC_FROM_CACHE = false;
 const SKELETON_PLACEHOLDER_COUNT = 6;
+const LOCAL_ID_PREFIX = 'local-';
+let PENDING_OPERATIONS = [];
+let PENDING_SYNC_COUNT = 0;
+const PENDING_OPS_KEY = 'pending_ops';
 
 document.addEventListener('DOMContentLoaded', async () => {
     const app = document.getElementById('app-container');
@@ -92,6 +96,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             initializeView(newSession);
         }
     });
+    
+    window.addEventListener('online', () => {
+        LAST_SYNC_FROM_CACHE = PENDING_OPERATIONS.length > 0;
+        syncPendingOperations().then(() => refreshData());
+    });
+    
+    window.addEventListener('offline', () => {
+        LAST_SYNC_FROM_CACHE = true;
+        renderAllUI();
+    });
 });
 
 /**
@@ -175,8 +189,11 @@ async function handleLogout() {
         localStorage.removeItem('user_id');
         localStorage.removeItem('store_cache');
         localStorage.removeItem('products_cache');
+        localStorage.removeItem(PENDING_OPS_KEY);
         STORE = null;
         PRODUCTS = [];
+        PENDING_OPERATIONS = [];
+        PENDING_SYNC_COUNT = 0;
     }
 }
 
@@ -199,8 +216,11 @@ function loadCache() {
     if (cachedUserId !== USER_ID) {
         localStorage.removeItem('store_cache');
         localStorage.removeItem('products_cache');
+        localStorage.removeItem(PENDING_OPS_KEY);
         STORE = null;
         PRODUCTS = [];
+        PENDING_OPERATIONS = [];
+        PENDING_SYNC_COUNT = 0;
         return;
     }
 
@@ -218,9 +238,208 @@ function loadCache() {
 
     const cachedStore = parseCache('store_cache');
     const cachedProducts = parseCache('products_cache');
+    const cachedPending = parseCache(PENDING_OPS_KEY);
 
     STORE = cachedStore || null;
     PRODUCTS = Array.isArray(cachedProducts) ? cachedProducts : [];
+    PENDING_OPERATIONS = Array.isArray(cachedPending) ? cachedPending : [];
+    PENDING_SYNC_COUNT = PENDING_OPERATIONS.length;
+}
+
+function persistCache() {
+    localStorage.setItem('store_cache', JSON.stringify(STORE));
+    localStorage.setItem('products_cache', JSON.stringify(PRODUCTS));
+}
+
+function persistPendingOperations() {
+    localStorage.setItem(PENDING_OPS_KEY, JSON.stringify(PENDING_OPERATIONS));
+    PENDING_SYNC_COUNT = PENDING_OPERATIONS.length;
+}
+
+function isLocalId(value) {
+    return typeof value === 'string' && value.startsWith(LOCAL_ID_PREFIX);
+}
+
+function queuePendingOperation(operation) {
+    const op = {
+        id: operation.id || `op-${Date.now()}-${Math.random().toString(16).slice(2, 6)}`,
+        ...operation
+    };
+    
+    if (op.type === 'product_upsert') {
+        const existingIndex = PENDING_OPERATIONS.findIndex(item => 
+            item.type === 'product_upsert' && item.payload?.productId === op.payload?.productId
+        );
+        if (existingIndex >= 0) {
+            PENDING_OPERATIONS[existingIndex] = op;
+        } else {
+            PENDING_OPERATIONS.push(op);
+        }
+    } else {
+        PENDING_OPERATIONS.push(op);
+    }
+    
+    persistPendingOperations();
+}
+
+function removePendingOperation(opId) {
+    PENDING_OPERATIONS = PENDING_OPERATIONS.filter(op => op.id !== opId);
+    persistPendingOperations();
+}
+
+function updateProductIdMapping(localId, remoteId) {
+    PRODUCTS = PRODUCTS.map(product => {
+        if (String(product.id) === String(localId)) {
+            return { ...product, id: remoteId };
+        }
+        return product;
+    });
+    
+    PENDING_OPERATIONS = PENDING_OPERATIONS.map(op => {
+        if (op.type === 'product_upsert' && String(op.payload?.productId) === String(localId)) {
+            return { ...op, payload: { ...op.payload, productId: remoteId } };
+        }
+        if (op.type === 'product_delete' && String(op.payload?.productId) === String(localId)) {
+            return { ...op, payload: { ...op.payload, productId: remoteId } };
+        }
+        return op;
+    });
+    
+    persistPendingOperations();
+    persistCache();
+}
+
+function updateStoreIdMapping(oldId, newId) {
+    PRODUCTS = PRODUCTS.map(product => {
+        if (String(product.store_id) === String(oldId)) {
+            return { ...product, store_id: newId };
+        }
+        return product;
+    });
+    
+    PENDING_OPERATIONS = PENDING_OPERATIONS.map(op => {
+        if (op.type === 'product_upsert' && String(op.payload?.data?.store_id) === String(oldId)) {
+            return { ...op, payload: { ...op.payload, data: { ...op.payload.data, store_id: newId } } };
+        }
+        if (op.type === 'store_delete' && String(op.payload?.storeId) === String(oldId)) {
+            return { ...op, payload: { ...op.payload, storeId: newId } };
+        }
+        return op;
+    });
+    
+    persistPendingOperations();
+    persistCache();
+}
+
+async function syncStoreOperation(payload) {
+    const data = { ...payload.data, user_id: USER_ID };
+    const sendData = { ...data };
+    const hadLocalId = isLocalId(sendData.id);
+    
+    if (hadLocalId) {
+        delete sendData.id;
+    }
+    
+    const storeQuery = supabase.from('store_requests');
+    const result = (!hadLocalId && STORE && !isLocalId(STORE.id))
+        ? await storeQuery.update(sendData).eq('user_id', USER_ID)
+        : await storeQuery.insert([sendData]);
+    
+    if (result.error) {
+        throw result.error;
+    }
+    
+    const savedStore = Array.isArray(result.data) ? result.data[0] : (result.data || data);
+    const previousId = STORE?.id || data.id;
+    STORE = savedStore || data;
+    if (previousId && STORE.id && String(previousId) !== String(STORE.id)) {
+        updateStoreIdMapping(previousId, STORE.id);
+    }
+    persistCache();
+}
+
+async function syncProductUpsert(payload) {
+    const productData = { ...payload.data };
+    const storeId = productData.store_id || STORE?.id;
+    
+    if (isLocalId(productData.id)) {
+        delete productData.id;
+    }
+    
+    if (!storeId || isLocalId(storeId)) {
+        throw new Error('La tienda aún no está sincronizada.');
+    }
+    
+    productData.store_id = storeId;
+    const hasRemoteId = !isLocalId(payload.productId);
+    
+    const result = hasRemoteId
+        ? await supabase.from('products').update(productData).eq('id', payload.productId)
+        : await supabase.from('products').insert([productData]);
+    
+    if (result.error) {
+        throw result.error;
+    }
+    
+    const savedProduct = Array.isArray(result.data) ? result.data[0] : result.data;
+    if (savedProduct?.id && !hasRemoteId) {
+        updateProductIdMapping(payload.productId, savedProduct.id);
+    }
+    persistCache();
+}
+
+async function syncProductDelete(payload) {
+    if (!payload?.productId || isLocalId(payload.productId)) {
+        return;
+    }
+    const { error } = await supabase.from('products').delete().eq('id', payload.productId);
+    if (error) {
+        throw error;
+    }
+}
+
+async function syncStoreDelete(payload) {
+    if (!payload?.storeId) {
+        return;
+    }
+    const { error: productsError } = await supabase.from('products').delete().eq('store_id', payload.storeId);
+    if (productsError) {
+        throw productsError;
+    }
+    const { error } = await supabase.from('store_requests').delete().eq('user_id', USER_ID);
+    if (error) {
+        throw error;
+    }
+}
+
+async function syncPendingOperations() {
+    if (!USER_ID || !navigator.onLine || PENDING_OPERATIONS.length === 0) {
+        return false;
+    }
+    
+    const operationsSnapshot = [...PENDING_OPERATIONS];
+    for (const operation of operationsSnapshot) {
+        try {
+            if (operation.type === 'store_upsert') {
+                await syncStoreOperation(operation.payload);
+            } else if (operation.type === 'product_upsert') {
+                await syncProductUpsert(operation.payload);
+            } else if (operation.type === 'product_delete') {
+                await syncProductDelete(operation.payload);
+            } else if (operation.type === 'store_delete') {
+                await syncStoreDelete(operation.payload);
+            }
+            removePendingOperation(operation.id);
+        } catch (error) {
+            console.error('Error sincronizando operación pendiente', error);
+            return false;
+        }
+    }
+    
+    if (PENDING_OPERATIONS.length === 0) {
+        LAST_SYNC_FROM_CACHE = false;
+    }
+    return true;
 }
 
 /**
@@ -242,6 +461,9 @@ async function refreshData() {
     renderAllUI();
 
     try {
+        if (PENDING_OPERATIONS.length > 0) {
+            await syncPendingOperations();
+        }
         // Fetch store request
         const { data: storeData, error: storeError } = await supabase
             .from('store_requests')
@@ -272,10 +494,9 @@ async function refreshData() {
             PRODUCTS = [];
         }
 
-        localStorage.setItem('store_cache', JSON.stringify(STORE));
-        localStorage.setItem('products_cache', JSON.stringify(PRODUCTS));
-        LAST_SYNC_FROM_CACHE = false;
-        PENDING_SYNC_COUNT = 0;
+        persistCache();
+        LAST_SYNC_FROM_CACHE = PENDING_OPERATIONS.length > 0 ? true : false;
+        PENDING_SYNC_COUNT = PENDING_OPERATIONS.length;
     } catch (error) {
         console.error('Error refreshing data:', error);
         LAST_SYNC_FROM_CACHE = true;
@@ -323,7 +544,7 @@ function renderStore() {
                     aria-label="Editar tienda"
                     touch-target="wrapper"
                 >
-                    ${renderIcon('../edit_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg', 24, 'slot="icon"')}
+                    ${renderIcon('./icons/edit.svg', 24, 'slot="icon"')}
                 </md-icon-button>
                 <h2 class="md-typescale-title-medium" style="color:var(--md-sys-color-primary);padding-right:40px;">
                     ${STORE.business_name}
@@ -362,9 +583,15 @@ function renderProducts() {
     }
 
     const renderBanner = () => {
-        const hasPending = LAST_SYNC_FROM_CACHE;
-        const baseMessage = LAST_SYNC_FROM_CACHE ? 'Productos en caché (sin conexión)' : 'Productos sincronizados';
-        const detail = LAST_SYNC_FROM_CACHE ? 'Mostrando los últimos datos guardados.' : 'Todos los datos están al día.';
+        const hasPending = LAST_SYNC_FROM_CACHE || PENDING_SYNC_COUNT > 0;
+        const baseMessage = LAST_SYNC_FROM_CACHE 
+            ? 'Productos en caché (sin conexión)' 
+            : hasPending ? 'Cambios pendientes de sincronizar' : 'Productos sincronizados';
+        const detail = LAST_SYNC_FROM_CACHE 
+            ? 'Mostrando los últimos datos guardados.'
+            : hasPending 
+                ? `${PENDING_SYNC_COUNT} cambio(s) pendientes por enviar.`
+                : 'Todos los datos están al día.';
         const toneClass = hasPending ? 'sync-banner warning' : 'sync-banner success';
         return `
             <div class="card ${toneClass}">
@@ -421,7 +648,7 @@ function renderProducts() {
                             aria-label="Opciones del producto ${product.name}"
                             touch-target="wrapper"
                         >
-                            ${renderIcon('../more_vert_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg', 24, 'slot="icon"')}
+                            ${renderIcon('./icons/more-vert.svg', 24, 'slot="icon"')}
                         </md-icon-button>
                     </div>
                 </div>
@@ -444,7 +671,7 @@ function renderSettings() {
         <div class="card" onclick="confirmDeleteStore()" style="cursor:pointer;margin-bottom:16px;">
             <div style="display:flex;align-items:center;gap:16px;">
                 <div style="width:40px;height:40px;background:var(--md-sys-color-error-container);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--md-sys-color-error);">
-                    ${renderIcon('../delete_forever_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg', 20)}
+                    ${renderIcon('./icons/delete-forever.svg', 20)}
                 </div>
                 <div class="md-typescale-body-large" style="color:var(--md-sys-color-error);font-weight:500;">
                     Eliminar Tienda
@@ -458,7 +685,7 @@ function renderSettings() {
         <div class="card" onclick="handleLogout()" style="cursor:pointer;">
             <div style="display:flex;align-items:center;gap:16px;">
                 <div style="width:40px;height:40px;background:var(--md-sys-color-error-container);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--md-sys-color-error);">
-                    ${renderIcon('../logout_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg', 20)}
+                    ${renderIcon('./icons/logout.svg', 20)}
                 </div>
                 <div class="md-typescale-body-large" style="color:var(--md-sys-color-error);font-weight:500;">
                     Cerrar Sesión
@@ -478,11 +705,11 @@ function renderIcon(path, size = 24, extraAttrs = '') {
  */
 function renderEmptyState(iconType, title, subtitle, buttonText, buttonAction, isSecondaryButton) {
     const icons = {
-        storefront: renderIcon('../storefront_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg', 48),
-        inventory_2: renderIcon('../inventory_2_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg', 48),
-        lock: renderIcon('../block_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg', 48),
-        pending: renderIcon('../package_2_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg', 48),
-        error: renderIcon('../delete_forever_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg', 48)
+        storefront: renderIcon('./icons/storefront.svg', 48),
+        inventory_2: renderIcon('./icons/inventory-2.svg', 48),
+        lock: renderIcon('./icons/block.svg', 48),
+        pending: renderIcon('./icons/package.svg', 48),
+        error: renderIcon('./icons/delete-forever.svg', 48)
     };
     
     const buttonTag = isSecondaryButton ? 'md-filled-tonal-button' : 'md-filled-button';
@@ -673,6 +900,7 @@ async function submitStore() {
     
     const storeData = {
         user_id: USER_ID,
+        id: STORE?.id || `${LOCAL_ID_PREFIX}store-${Date.now()}`,
         business_name: businessName,
         business_type: document.getElementById('st-type').value.trim(),
         phone: phone,
@@ -681,21 +909,27 @@ async function submitStore() {
         status: STORE?.status || 'pending'
     };
     
-    const result = STORE
-        ? await supabase.from('store_requests').update(storeData).eq('user_id', USER_ID)
-        : await supabase.from('store_requests').insert([storeData]);
+    STORE = { ...storeData };
+    persistCache();
+    LAST_SYNC_FROM_CACHE = !navigator.onLine || PENDING_OPERATIONS.length > 0;
+    renderAllUI();
     
-    if (result.error) {
-        showToast(`Error: ${result.error.message}`);
-        // Re-enable button on error
-        if (saveBtn) {
-            saveBtn.disabled = false;
-            saveBtn.textContent = 'Guardar';
-        }
-    } else {
-        closeModal();
-        showToast(STORE ? 'Tienda actualizada' : 'Solicitud enviada');
+    queuePendingOperation({
+        type: 'store_upsert',
+        payload: { data: storeData }
+    });
+    
+    closeModal();
+    showToast('Tienda guardada localmente');
+    
+    if (navigator.onLine) {
+        await syncPendingOperations();
         await refreshData();
+    }
+    
+    if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Guardar';
     }
 }
 
@@ -790,21 +1024,38 @@ async function submitProduct(productId = null) {
         category: document.getElementById('p-cat').value.trim()
     };
     
-    const { error } = product
-        ? await supabase.from('products').update(productData).eq('id', product.id)
-        : await supabase.from('products').insert([productData]);
+    const productIdToUse = product?.id || `${LOCAL_ID_PREFIX}${Date.now()}`;
+    const localProduct = { id: productIdToUse, ...productData };
     
-    if (error) {
-        showToast(`Error: ${error.message}`);
-        // Re-enable button on error
-        if (saveBtn) {
-            saveBtn.disabled = false;
-            saveBtn.textContent = 'Guardar';
-        }
+    if (product) {
+        PRODUCTS = PRODUCTS.map(item => String(item.id) === String(productIdToUse) ? localProduct : item);
     } else {
-        closeModal();
-        showToast('Producto guardado');
+        PRODUCTS = [...PRODUCTS, localProduct];
+    }
+    
+    persistCache();
+    LAST_SYNC_FROM_CACHE = !navigator.onLine || PENDING_OPERATIONS.length > 0;
+    renderAllUI();
+    
+    queuePendingOperation({
+        type: 'product_upsert',
+        payload: {
+            productId: productIdToUse,
+            data: localProduct
+        }
+    });
+    
+    closeModal();
+    showToast('Producto guardado localmente');
+    
+    if (navigator.onLine) {
+        await syncPendingOperations();
         await refreshData();
+    }
+    
+    if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Guardar';
     }
 }
 
@@ -821,11 +1072,11 @@ function showProductMenu(productId) {
     const menuHtml = `
         <div class="bottom-sheet-title md-typescale-title-medium">${product.name}</div>
         <button class="bottom-sheet-item md-typescale-body-large" onclick="openProductModal(${JSON.stringify(product.id)})" aria-label="Editar ${product.name}">
-            ${renderIcon('../edit_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg')}
+            ${renderIcon('./icons/edit.svg')}
             Editar
         </button>
         <button class="bottom-sheet-item md-typescale-body-large" style="color:var(--md-sys-color-error);" onclick="deleteProduct(${JSON.stringify(product.id)})" aria-label="Eliminar ${product.name}">
-            ${renderIcon('../delete_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg')}
+            ${renderIcon('./icons/delete.svg')}
             <span>Eliminar</span>
         </button>
     `;
@@ -865,12 +1116,27 @@ async function deleteProduct(productId) {
         return;
     }
     
-    const { error } = await supabase.from('products').delete().eq('id', product.id);
+    PRODUCTS = PRODUCTS.filter(p => String(p.id) !== String(product.id));
+    persistCache();
     
-    if (error) {
-        showToast(`Error: ${error.message}`);
+    // Remove pending upserts for the same product
+    PENDING_OPERATIONS = PENDING_OPERATIONS.filter(op => !(op.type === 'product_upsert' && String(op.payload?.productId) === String(product.id)));
+    
+    if (!isLocalId(product.id)) {
+        queuePendingOperation({
+            type: 'product_delete',
+            payload: { productId: product.id }
+        });
     } else {
-        showToast('Producto eliminado');
+        persistPendingOperations();
+    }
+    
+    LAST_SYNC_FROM_CACHE = !navigator.onLine || PENDING_OPERATIONS.length > 0;
+    renderAllUI();
+    showToast('Producto eliminado localmente');
+    
+    if (navigator.onLine) {
+        await syncPendingOperations();
         await refreshData();
     }
 }
@@ -913,53 +1179,36 @@ async function deleteStore() {
         deleteBtn.disabled = true;
         deleteBtn.textContent = 'Eliminando...';
     }
+    const storeId = STORE.id;
     
-    // First delete all products associated with this store
-    const { error: productsError } = await supabase
-        .from('products')
-        .delete()
-        .eq('store_id', STORE.id);
-    
-    if (productsError) {
-        showToast(`Error al eliminar productos: ${productsError.message}`);
-        // Re-enable button on error
-        if (deleteBtn) {
-            deleteBtn.disabled = false;
-            deleteBtn.textContent = 'Eliminar';
-        }
-        return;
-    }
-    
-    // Then delete the store request
-    const { error: storeError } = await supabase
-        .from('store_requests')
-        .delete()
-        .eq('user_id', USER_ID);
-    
-    if (storeError) {
-        showToast(`Error al eliminar tienda: ${storeError.message}`);
-        // Re-enable button on error
-        if (deleteBtn) {
-            deleteBtn.disabled = false;
-            deleteBtn.textContent = 'Eliminar';
-        }
-        return;
-    }
-    
-    // Clear local cache
     STORE = null;
     PRODUCTS = [];
     localStorage.removeItem('store_cache');
     localStorage.removeItem('products_cache');
     
-    closeModal();
-    showToast('Tienda eliminada correctamente');
+    PENDING_OPERATIONS = [];
+    queuePendingOperation({
+        type: 'store_delete',
+        payload: { storeId }
+    });
     
-    // Refresh UI
+    LAST_SYNC_FROM_CACHE = true;
+    persistCache();
     renderAllUI();
+    closeModal();
+    showToast('Tienda eliminada localmente');
     
-    // Navigate to store page to show the "create store" option
     navigateTo('store-page', document.querySelector('.nav-item[data-page="store-page"]'));
+    
+    if (navigator.onLine) {
+        await syncPendingOperations();
+        await refreshData();
+    }
+    
+    if (deleteBtn) {
+        deleteBtn.disabled = false;
+        deleteBtn.textContent = 'Eliminar';
+    }
 }
 
 /**
@@ -1001,6 +1250,11 @@ async function checkConnection() {
         clearTimeout(timeoutId);
         statusChip.className = 'status-chip online';
         statusText.textContent = 'Conectado';
+        
+        if (PENDING_OPERATIONS.length > 0) {
+            await syncPendingOperations();
+            await refreshData();
+        }
     } catch (error) {
         statusChip.className = 'status-chip offline';
         statusText.textContent = 'Desconectado';
