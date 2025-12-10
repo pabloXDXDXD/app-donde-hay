@@ -4,7 +4,7 @@ Este documento proporciona una descripción detallada de la arquitectura, funcio
 
 ## 1. Descripción General
 
-La aplicación es una Single-Page Application (SPA) que permite a los usuarios gestionar un inventario de productos y el perfil de su tienda. Está diseñada con un enfoque "offline-first", priorizando la experiencia del usuario al permitir el acceso a datos cacheados incluso sin conexión a internet.
+La aplicación es una Single-Page Application (SPA) que permite a los usuarios gestionar un inventario de productos y el perfil de su tienda. Los recursos visuales (estilos, componentes y los íconos locales) permanecen disponibles sin conexión, mientras que los datos (tiendas y productos) se consultan siempre en línea para evitar inconsistencias.
 
 La interfaz de usuario sigue los principios de **Material Design 3**, utilizando un tema oscuro personalizado con:
 - Sistema de elevación con sombras apropiadas (3 niveles)
@@ -64,9 +64,9 @@ La lógica principal se puede dividir en las siguientes áreas:
 
 1.  **Inicialización y Sesión**:
     *   Se inicializa el cliente de Supabase.
-    *   Al cargar el DOM, se verifica el estado de la sesión del usuario con un enfoque **offline-first**:
-        *   **Online**: Se contacta a Supabase para validar la sesión actual. El token se guarda en `localStorage` para uso futuro sin conexión.
-        *   **Offline**: Se comprueba si existe un token de sesión en `localStorage`. Si es así, se asume que la sesión es válida y se carga la aplicación en modo offline.
+    *   Al cargar el DOM, se verifica el estado de la sesión del usuario:
+        *   **Online**: Se contacta a Supabase para validar la sesión actual. El token se guarda en `localStorage` únicamente para revalidar el inicio de sesión si no hay conexión.
+        *   **Offline**: Se comprueba si existe un token de sesión en `localStorage`. Si es así, se asume que la sesión es válida para la navegación, pero los datos se mostrarán solo cuando vuelva la conexión.
     *   Un listener `onAuthStateChange` gestiona los cambios de estado (login/logout) para redirigir al usuario automáticamente.
 
 2.  **Gestión de Vistas (Navegación)**:
@@ -74,8 +74,8 @@ La lógica principal se puede dividir en las siguientes áreas:
     *   `navigateTo()` controla la navegación entre las páginas internas del menú (Productos, Tienda, Ajustes).
 
 3.  **Gestión de Datos (CRUD)**:
-    *   **Caché**: La aplicación guarda en `localStorage` los datos de la tienda (`store_cache`) y los productos (`products_cache`) para un acceso rápido y offline.
-    *   **Sincronización**: La función `refreshData()` se ejecuta cuando hay conexión para obtener los datos más recientes de Supabase y actualizar la caché local.
+    *   **Fuentes de datos**: La aplicación consulta siempre los datos de tienda y productos directamente en Supabase; no se mantienen copias locales para evitar inconsistencias.
+    *   **Sincronización**: La función `refreshData()` se ejecuta cuando hay conexión para obtener los datos más recientes de Supabase y actualizar la interfaz.
     *   **Funciones CRUD**:
         *   `submitStore()`: Crea o actualiza el perfil de la tienda.
         *   `deleteStore()`: Elimina permanentemente la tienda y todos los productos asociados.
@@ -121,8 +121,8 @@ La comunicación entre el WebView y la aplicación nativa de Android se realiza 
 ## 6. Notas Técnicas y Correcciones Recientes
 
 ### Gestión de Caché y Persistencia
--   **Problema resuelto**: La función `loadCache()` ahora verifica que los valores cacheados no sean la cadena `'null'` antes de cargarlos, evitando que tiendas eliminadas reaparezcan tras cerrar sesión y volver a iniciar.
--   La caché se limpia apropiadamente cuando se elimina una tienda usando `localStorage.removeItem()`.
+-   **Problema resuelto**: La función `loadCache()` ahora limpia cualquier caché heredada y reinicia el estado en memoria para evitar que tiendas eliminadas reaparezcan tras cerrar sesión y volver a iniciar.
+-   Los datos de tienda y productos ya no se almacenan en `localStorage`; siempre se consultan en línea para mostrar información fresca.
 
 ### CRUD de Productos
 -   **Problema resuelto**: Las operaciones de editar y eliminar productos ahora funcionan correctamente.
@@ -144,11 +144,11 @@ La aplicación tiene capacidades offline limitadas:
 
 **✅ Funciona sin conexión:**
 -   Estilos CSS locales (todos los estilos de `css/styles.css`)
+-   Íconos SVG locales incluidos en el repositorio
 -   Componentes de Material Web (`@material/web`) servidos desde `vendor/` mediante el `importmap` de `index.html`
--   Lógica JavaScript de la aplicación (`js/main.js`)
--   Navegación y gestión de caché de datos
--   Visualización de datos cacheados previamente
--   Cliente de Supabase (`supabase.js`)
+-   Lógica JavaScript de la aplicación (`js/main.js`) y validación de sesión con token guardado
+-   Cliente de Supabase (`supabase.js`) cargado localmente
 
 **❌ Requiere conexión a internet:**
 -   **Backend Supabase**: Las operaciones de base de datos y autenticación requieren conectividad.
+-   Datos de tienda y productos (no hay caché local, se consultan siempre en línea).
