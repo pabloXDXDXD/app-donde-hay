@@ -500,12 +500,14 @@ body {
 .sync-banner.success {
     background: var(--md-sys-color-secondary-container);
     color: var(--md-sys-color-on-secondary-container);
+    border-color: var(--md-sys-color-secondary);
     border-color: color-mix(in srgb, var(--md-sys-color-secondary-container) 80%, var(--md-sys-color-secondary));
 }
 
 .sync-banner.warning {
     background: var(--md-sys-color-error-container);
     color: var(--md-sys-color-on-error-container);
+    border-color: var(--md-sys-color-error);
     border-color: color-mix(in srgb, var(--md-sys-color-error-container) 80%, var(--md-sys-color-error));
 }
 
@@ -519,6 +521,7 @@ body {
     content: '';
     position: absolute;
     inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
     background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--md-sys-color-surface) 65%, var(--md-sys-color-on-surface)), transparent);
     transform: translateX(-100%);
     animation: shimmer 1.1s infinite;
@@ -527,6 +530,7 @@ body {
 .skeleton-line {
     height: 14px;
     border-radius: 999px;
+    background: var(--md-sys-color-outline-variant);
     background: color-mix(in srgb, var(--md-sys-color-outline-variant) 40%, transparent);
 }
 
