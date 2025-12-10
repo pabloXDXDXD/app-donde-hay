@@ -8,6 +8,19 @@ const LOCAL_ID_PREFIX = 'local-';
 let PENDING_OPERATIONS = [];
 let PENDING_SYNC_COUNT = 0;
 const PENDING_OPS_KEY = 'pending_ops';
+let LOCAL_ID_COUNTER = 0;
+
+function generateLocalId(entity) {
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+        return `${LOCAL_ID_PREFIX}${entity}-${crypto.randomUUID()}`;
+    }
+    if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+        const buffer = new Uint32Array(2);
+        crypto.getRandomValues(buffer);
+        return `${LOCAL_ID_PREFIX}${entity}-${buffer[0].toString(16)}-${buffer[1].toString(16)}-${++LOCAL_ID_COUNTER}`;
+    }
+    return `${LOCAL_ID_PREFIX}${entity}-${Date.now()}-${Math.random().toString(16).slice(2, 6)}-${++LOCAL_ID_COUNTER}`;
+}
 
 document.addEventListener('DOMContentLoaded', async () => {
     const app = document.getElementById('app-container');
@@ -262,7 +275,7 @@ function isLocalId(value) {
 
 function queuePendingOperation(operation) {
     const op = {
-        id: operation.id || `op-${Date.now()}-${Math.random().toString(16).slice(2, 6)}`,
+        id: operation.id || generateLocalId('op'),
         ...operation
     };
     
@@ -367,7 +380,7 @@ async function syncProductUpsert(payload) {
     }
     
     if (!storeId || isLocalId(storeId)) {
-        throw new Error('La tienda aún no está sincronizada.');
+        throw new Error('La tienda debe sincronizarse antes de agregar productos. Conéctate a internet e inténtalo nuevamente.');
     }
     
     productData.store_id = storeId;
@@ -413,8 +426,11 @@ async function syncStoreDelete(payload) {
 }
 
 async function syncPendingOperations() {
-    if (!USER_ID || !navigator.onLine || PENDING_OPERATIONS.length === 0) {
+    if (!USER_ID || !navigator.onLine) {
         return false;
+    }
+    if (PENDING_OPERATIONS.length === 0) {
+        return true;
     }
     
     const operationsSnapshot = [...PENDING_OPERATIONS];
@@ -431,7 +447,7 @@ async function syncPendingOperations() {
             }
             removePendingOperation(operation.id);
         } catch (error) {
-            console.error('Error sincronizando operación pendiente', error);
+            console.error('Error synchronizing pending operation', error);
             return false;
         }
     }
@@ -495,7 +511,7 @@ async function refreshData() {
         }
 
         persistCache();
-        LAST_SYNC_FROM_CACHE = PENDING_OPERATIONS.length > 0 ? true : false;
+        LAST_SYNC_FROM_CACHE = PENDING_OPERATIONS.length > 0;
         PENDING_SYNC_COUNT = PENDING_OPERATIONS.length;
     } catch (error) {
         console.error('Error refreshing data:', error);
@@ -584,14 +600,17 @@ function renderProducts() {
 
     const renderBanner = () => {
         const hasPending = LAST_SYNC_FROM_CACHE || PENDING_SYNC_COUNT > 0;
-        const baseMessage = LAST_SYNC_FROM_CACHE 
-            ? 'Productos en caché (sin conexión)' 
-            : hasPending ? 'Cambios pendientes de sincronizar' : 'Productos sincronizados';
-        const detail = LAST_SYNC_FROM_CACHE 
-            ? 'Mostrando los últimos datos guardados.'
-            : hasPending 
-                ? `${PENDING_SYNC_COUNT} cambio(s) pendientes por enviar.`
-                : 'Todos los datos están al día.';
+        let baseMessage = 'Productos sincronizados';
+        let detail = 'Todos los datos están al día.';
+        
+        if (LAST_SYNC_FROM_CACHE) {
+            baseMessage = 'Productos en caché (sin conexión)';
+            detail = 'Mostrando los últimos datos guardados.';
+        } else if (hasPending) {
+            baseMessage = 'Cambios pendientes de sincronizar';
+            detail = `${PENDING_SYNC_COUNT} cambio(s) pendientes por enviar.`;
+        }
+        
         const toneClass = hasPending ? 'sync-banner warning' : 'sync-banner success';
         return `
             <div class="card ${toneClass}">
@@ -900,7 +919,7 @@ async function submitStore() {
     
     const storeData = {
         user_id: USER_ID,
-        id: STORE?.id || `${LOCAL_ID_PREFIX}store-${Date.now()}`,
+        id: STORE?.id || generateLocalId('store'),
         business_name: businessName,
         business_type: document.getElementById('st-type').value.trim(),
         phone: phone,
@@ -1024,7 +1043,7 @@ async function submitProduct(productId = null) {
         category: document.getElementById('p-cat').value.trim()
     };
     
-    const productIdToUse = product?.id || `${LOCAL_ID_PREFIX}${Date.now()}`;
+    const productIdToUse = product?.id || generateLocalId('product');
     const localProduct = { id: productIdToUse, ...productData };
     
     if (product) {
@@ -1121,14 +1140,13 @@ async function deleteProduct(productId) {
     
     // Remove pending upserts for the same product
     PENDING_OPERATIONS = PENDING_OPERATIONS.filter(op => !(op.type === 'product_upsert' && String(op.payload?.productId) === String(product.id)));
+    persistPendingOperations();
     
     if (!isLocalId(product.id)) {
         queuePendingOperation({
             type: 'product_delete',
             payload: { productId: product.id }
         });
-    } else {
-        persistPendingOperations();
     }
     
     LAST_SYNC_FROM_CACHE = !navigator.onLine || PENDING_OPERATIONS.length > 0;
@@ -1186,7 +1204,8 @@ async function deleteStore() {
     localStorage.removeItem('store_cache');
     localStorage.removeItem('products_cache');
     
-    PENDING_OPERATIONS = [];
+    const clearedTypes = ['store_upsert', 'store_delete', 'product_upsert', 'product_delete'];
+    PENDING_OPERATIONS = PENDING_OPERATIONS.filter(op => !clearedTypes.includes(op.type));
     queuePendingOperation({
         type: 'store_delete',
         payload: { storeId }
@@ -1243,8 +1262,7 @@ async function checkConnection() {
         
         await fetch(SUPABASE_URL, {
             signal: controller.signal,
-            method: 'HEAD',
-            mode: 'no-cors'
+            method: 'HEAD'
         });
         
         clearTimeout(timeoutId);
