@@ -96,11 +96,11 @@ body {
     background-repeat: no-repeat;
     background-position: center;
     background-size: contain;
-    background-color: transparent;
+    background-color: currentColor;
     flex-shrink: 0;
 }
 
-@supports (mask: url("")) or (-webkit-mask: url("")) {
+@supports (mask-image: none) or (-webkit-mask-image: none) {
     .icon {
         background-image: none;
         background-color: currentColor;

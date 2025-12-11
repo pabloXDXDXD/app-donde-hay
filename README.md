@@ -4,7 +4,7 @@ Este documento proporciona una descripción detallada de la arquitectura, funcio
 
 ## 1. Descripción General
 
-La aplicación es una Single-Page Application (SPA) que permite a los usuarios gestionar un inventario de productos y el perfil de su tienda. Los recursos visuales (estilos, componentes y los íconos locales) permanecen disponibles sin conexión, y los datos (tiendas y productos) se conservan en caché local con una cola de sincronización para seguir funcionando si no hay conectividad.
+La aplicación es una Single-Page Application (SPA) que permite a los usuarios gestionar un inventario de productos y el perfil de su tienda. Los recursos visuales (estilos, componentes y los iconos locales) permanecen disponibles sin conexión, y los datos (tiendas y productos) se conservan en caché local con una cola de sincronización para seguir funcionando si no hay conectividad.
 
 La interfaz de usuario sigue los principios de **Material Design 3**, utilizando un tema oscuro personalizado con:
 - Sistema de elevación con sombras apropiadas (3 niveles)

@@ -257,9 +257,8 @@ function loadCache() {
     PRODUCTS = Array.isArray(cachedProducts) ? cachedProducts : [];
     PENDING_OPERATIONS = Array.isArray(cachedPending) ? cachedPending : [];
     PENDING_SYNC_COUNT = PENDING_OPERATIONS.length;
-    if (!navigator.onLine && (STORE || PRODUCTS.length > 0)) {
-        LAST_SYNC_FROM_CACHE = true;
-    }
+    const loadedFromCache = !!cachedStore || (Array.isArray(cachedProducts) && cachedProducts.length > 0);
+    LAST_SYNC_FROM_CACHE = loadedFromCache;
 }
 
 function persistCache() {
@@ -611,6 +610,7 @@ function renderProducts() {
         if (isSyncing) {
             baseMessage = 'Sincronizando productos';
             detail = 'Actualizando datos desde la nube...';
+            toneClass = 'sync-banner warning';
         } else if (LAST_SYNC_FROM_CACHE) {
             baseMessage = 'Productos en caché (sin conexión)';
             detail = 'Mostrando los últimos datos guardados.';
@@ -621,7 +621,7 @@ function renderProducts() {
             toneClass = 'sync-banner warning';
         }
         
-        const loader = isSyncing ? `<div class="banner-loader" role="status" aria-label="Sincronizando datos"></div>` : '';
+        const loader = isSyncing ? `<div class="banner-loader" role="status" aria-label="Sincronizando datos" aria-live="polite"></div>` : '';
         return `
             <div class="card ${toneClass}">
                 <div class="banner-header">
@@ -839,8 +839,6 @@ function openBottomSheet(html) {
     }
     overlay.innerHTML = `<div class="bottom-sheet-content" onclick="event.stopPropagation()">${html}</div>`;
     overlay.classList.add('active');
-    overlay.style.display = 'flex';
-    overlay.style.opacity = '1';
     return true;
 }
 
@@ -853,8 +851,6 @@ function closeBottomSheet() {
         return;
     }
     overlay.classList.remove('active');
-    overlay.style.display = '';
-    overlay.style.opacity = '';
 }
 
 /**
