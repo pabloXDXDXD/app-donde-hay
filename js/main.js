@@ -256,6 +256,18 @@ async function handleLogout() {
  * Initialize the main menu view
  */
 function initializeMenu() {
+    console.log('Initializing menu view');
+    
+    // Verify critical DOM elements exist
+    const bottomSheet = document.getElementById('bottom-sheet-menu');
+    const modalOverlay = document.getElementById('modal-overlay');
+    console.log('Bottom sheet element exists:', !!bottomSheet);
+    console.log('Modal overlay element exists:', !!modalOverlay);
+    
+    if (!bottomSheet) {
+        console.error('Critical: bottom-sheet-menu element not found in DOM!');
+    }
+    
     loadCache();
     renderAllUI();
     refreshData();
@@ -883,8 +895,20 @@ function openBottomSheet(html) {
     }
     console.log('Bottom sheet overlay found, adding content');
     overlay.innerHTML = `<div class="bottom-sheet-content" onclick="event.stopPropagation()">${html}</div>`;
-    overlay.classList.add('active');
-    console.log('Bottom sheet should now be visible with class:', overlay.className);
+    
+    // Use requestAnimationFrame to ensure the DOM is updated and rendered
+    // before adding the active class, which triggers the CSS transition
+    requestAnimationFrame(() => {
+        overlay.classList.add('active');
+        console.log('Bottom sheet should now be visible with class:', overlay.className);
+        
+        // Additional debug: log the overlay's computed styles
+        const computedStyle = window.getComputedStyle(overlay);
+        console.log('Bottom sheet display:', computedStyle.display);
+        console.log('Bottom sheet opacity:', computedStyle.opacity);
+        console.log('Bottom sheet z-index:', computedStyle.zIndex);
+    });
+    
     return true;
 }
 
