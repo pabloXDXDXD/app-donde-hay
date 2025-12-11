@@ -257,6 +257,8 @@ function loadCache() {
     PRODUCTS = Array.isArray(cachedProducts) ? cachedProducts : [];
     PENDING_OPERATIONS = Array.isArray(cachedPending) ? cachedPending : [];
     PENDING_SYNC_COUNT = PENDING_OPERATIONS.length;
+    const loadedFromCache = !!cachedStore || (Array.isArray(cachedProducts) && cachedProducts.length > 0);
+    LAST_SYNC_FROM_CACHE = loadedFromCache;
 }
 
 function persistCache() {
@@ -599,39 +601,38 @@ function renderProducts() {
     }
 
     const renderBanner = () => {
-        const hasPending = LAST_SYNC_FROM_CACHE || PENDING_SYNC_COUNT > 0;
+        const hasPending = PENDING_SYNC_COUNT > 0;
+        const isSyncing = IS_LOADING_ONLINE;
         let baseMessage = 'Productos sincronizados';
         let detail = 'Todos los datos están al día.';
+        let toneClass = 'sync-banner success';
         
-        if (LAST_SYNC_FROM_CACHE) {
+        if (isSyncing) {
+            baseMessage = 'Sincronizando productos';
+            detail = 'Actualizando datos desde la nube...';
+            toneClass = 'sync-banner warning';
+        } else if (LAST_SYNC_FROM_CACHE) {
             baseMessage = 'Productos en caché (sin conexión)';
             detail = 'Mostrando los últimos datos guardados.';
+            toneClass = 'sync-banner warning';
         } else if (hasPending) {
             baseMessage = 'Cambios pendientes de sincronizar';
             detail = `${PENDING_SYNC_COUNT} cambio(s) pendientes por enviar.`;
+            toneClass = 'sync-banner warning';
         }
         
-        const toneClass = hasPending ? 'sync-banner warning' : 'sync-banner success';
+        const loader = isSyncing ? `<div class="banner-loader" role="status" aria-label="Sincronizando datos" aria-live="polite"></div>` : '';
         return `
             <div class="card ${toneClass}">
-                <div class="md-typescale-title-small">${baseMessage}</div>
-                <p class="md-typescale-body-small" style="margin-top:4px;">${detail}</p>
-            </div>
-        `;
-    };
-
-    const renderSkeletons = () => {
-        const placeholders = Array.from({ length: SKELETON_PLACEHOLDER_COUNT }).map(() => `
-            <div class="card card-product skeleton-card">
-                <div class="skeleton-line" style="width:70%;"></div>
-                <div class="skeleton-line short"></div>
-                <div class="card-actions" style="margin-top:auto;">
-                    <div class="skeleton-line price"></div>
-                    <div class="skeleton-line icon"></div>
+                <div class="banner-header">
+                    <div>
+                        <div class="md-typescale-title-small">${baseMessage}</div>
+                        <p class="md-typescale-body-small" style="margin-top:4px;">${detail}</p>
+                    </div>
+                    ${loader}
                 </div>
             </div>
-        `).join('');
-        return placeholders;
+        `;
     };
 
     if (!STORE || STORE.status !== 'approved') {
@@ -643,16 +644,27 @@ function renderProducts() {
             "navigateTo('store-page',document.querySelector('[data-page=store-page]'))",
             true
         );
-    } else if (IS_LOADING_ONLINE) {
-        productsPage.innerHTML = renderBanner() + renderSkeletons();
-    } else if (PRODUCTS.length === 0) {
-        productsPage.innerHTML = renderBanner() + renderEmptyState(
-            'inventory_2',
-            'Sin Productos',
-            'Usa el botón <b>+</b> para agregar tu primer producto.'
-        );
     } else {
-        productsPage.innerHTML = renderBanner() + PRODUCTS.map(product => {
+        const banner = renderBanner();
+        if (PRODUCTS.length === 0) {
+            const emptyState = IS_LOADING_ONLINE
+                ? `
+                    <div class="card" aria-live="polite">
+                        <div class="md-typescale-body-medium" style="color:var(--md-sys-color-on-surface-variant);display:flex;align-items:center;gap:8px;">
+                            <div class="banner-loader" aria-hidden="true"></div>
+                            <span>Cargando productos...</span>
+                        </div>
+                    </div>
+                `
+                : renderEmptyState(
+                    'inventory_2',
+                    'Sin Productos',
+                    'Usa el botón <b>+</b> para agregar tu primer producto.'
+                );
+            productsPage.innerHTML = banner + emptyState;
+            return;
+        }
+        productsPage.innerHTML = banner + PRODUCTS.map(product => {
             const productIdLiteral = JSON.stringify(product.id);
             return `
                 <div class="card card-product">
