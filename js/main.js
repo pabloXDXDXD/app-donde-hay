@@ -54,30 +54,71 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Offline-first session verification
     splashText.textContent = 'Verificando sesión...';
-    const isOnline = navigator.onLine;
+    
+    // Try to detect online status with fallback
+    let isOnline = navigator.onLine;
+    console.log('Session verification started. navigator.onLine:', isOnline);
+    
+    // If navigator.onLine is unreliable (common in WebView), try a quick network check
+    if (isOnline) {
+        try {
+            console.log('Attempting quick network check...');
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 2000);
+            
+            await fetch(SUPABASE_URL, {
+                signal: controller.signal,
+                method: 'HEAD',
+                cache: 'no-cache'
+            });
+            
+            clearTimeout(timeoutId);
+            console.log('Network check successful - device is online');
+            isOnline = true;
+        } catch (error) {
+            console.warn('Network check failed, device may be offline:', error.message);
+            isOnline = false;
+        }
+    }
     
     if (isOnline) {
         // ONLINE: Validate token with server
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (session) {
-            // Valid session - store token for offline use
-            localStorage.setItem('session_token', session.access_token);
-            localStorage.setItem('user_id', session.user.id);
-            initializeView(session);
-        } else {
-            // No valid session - clear stored token
-            localStorage.removeItem('session_token');
-            localStorage.removeItem('user_id');
-            initializeView(null);
+        console.log('Device is online, validating session with server');
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            
+            if (session) {
+                // Valid session - store token for offline use
+                console.log('Valid session found, storing token for offline use');
+                localStorage.setItem('session_token', session.access_token);
+                localStorage.setItem('user_id', session.user.id);
+                console.log('Session token and user_id saved to localStorage');
+                initializeView(session);
+            } else {
+                // No valid session - clear stored token
+                console.log('No valid session found, clearing stored tokens');
+                localStorage.removeItem('session_token');
+                localStorage.removeItem('user_id');
+                initializeView(null);
+            }
+        } catch (error) {
+            console.error('Error getting session from server, falling back to offline mode:', error);
+            // Fallback to offline mode if server request fails
+            isOnline = false;
         }
-    } else {
+    }
+    
+    if (!isOnline) {
         // OFFLINE: Check for cached token
+        console.log('Device is offline, checking for cached session');
         const cachedToken = localStorage.getItem('session_token');
         const cachedUserId = localStorage.getItem('user_id');
+        console.log('Cached token exists:', !!cachedToken);
+        console.log('Cached userId exists:', !!cachedUserId);
         
         if (cachedToken && cachedUserId) {
             // Create a minimal session object for offline use
+            console.log('Creating offline session with cached credentials');
             const offlineSession = {
                 access_token: cachedToken,
                 user: { id: cachedUserId }
@@ -85,6 +126,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             initializeView(offlineSession);
         } else {
             // No cached token - redirect to login
+            console.log('No cached credentials found, showing login screen');
             initializeView(null);
         }
     }
@@ -728,7 +770,8 @@ function renderSettings() {
 
 function renderIcon(path, size = 24, extraAttrs = '') {
     const attrs = extraAttrs ? ` ${extraAttrs}` : '';
-    return `<span class="icon" style="--icon-url:url('${path}');width:${size}px;height:${size}px;" aria-hidden="true"${attrs}></span>`;
+    // Use data-icon-path for debugging and potential fallbacks
+    return `<span class="icon" style="--icon-url:url('${path}');width:${size}px;height:${size}px;" data-icon-path="${path}" aria-hidden="true"${attrs}></span>`;
 }
 
 /**
@@ -832,13 +875,16 @@ function closeModal() {
  * Open bottom sheet menu
  */
 function openBottomSheet(html) {
+    console.log('openBottomSheet called');
     const overlay = document.getElementById('bottom-sheet-menu');
     if (!overlay) {
-        console.warn('Bottom sheet overlay not found');
+        console.error('Bottom sheet overlay element not found in DOM');
         return false;
     }
+    console.log('Bottom sheet overlay found, adding content');
     overlay.innerHTML = `<div class="bottom-sheet-content" onclick="event.stopPropagation()">${html}</div>`;
     overlay.classList.add('active');
+    console.log('Bottom sheet should now be visible with class:', overlay.className);
     return true;
 }
 
@@ -846,11 +892,14 @@ function openBottomSheet(html) {
  * Close bottom sheet menu
  */
 function closeBottomSheet() {
+    console.log('closeBottomSheet called');
     const overlay = document.getElementById('bottom-sheet-menu');
     if (!overlay) {
+        console.error('Bottom sheet overlay not found when trying to close');
         return;
     }
     overlay.classList.remove('active');
+    console.log('Bottom sheet closed, class removed');
 }
 
 /**
@@ -1094,11 +1143,14 @@ async function submitProduct(productId = null) {
  * Show product options menu (bottom sheet)
  */
 function showProductMenu(productId) {
+    console.log('showProductMenu called with productId:', productId);
     const product = findProductById(productId);
     if (!product) {
+        console.error('Product not found:', productId);
         showToast('Producto no encontrado');
         return;
     }
+    console.log('Product found:', product.name);
     
     const menuHtml = `
         <div class="bottom-sheet-title md-typescale-title-medium">${product.name}</div>
@@ -1112,8 +1164,10 @@ function showProductMenu(productId) {
         </button>
     `;
 
+    console.log('Attempting to open bottom sheet');
     const opened = openBottomSheet(menuHtml);
     if (!opened) {
+        console.warn('Bottom sheet failed to open, showing modal fallback');
         openModal(`
             <div class="modal-title md-typescale-headline-small">${product.name}</div>
             <div class="modal-actions" style="justify-content: space-between; width: 100%;">
@@ -1122,6 +1176,8 @@ function showProductMenu(productId) {
                 <md-filled-button onclick="closeModal(); openProductModal(${JSON.stringify(product.id)})">Editar</md-filled-button>
             </div>
         `);
+    } else {
+        console.log('Bottom sheet opened successfully');
     }
 }
 
