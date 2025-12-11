@@ -1177,11 +1177,11 @@ function showProductMenu(productId) {
     
     const menuHtml = `
         <div class="bottom-sheet-title md-typescale-title-medium">${product.name}</div>
-        <button class="bottom-sheet-item md-typescale-body-large" onclick="openProductModal(${JSON.stringify(product.id)})" aria-label="Editar ${product.name}">
+        <button class="bottom-sheet-item md-typescale-body-large" onclick="closeBottomSheet(); openProductModal(${JSON.stringify(product.id)})" aria-label="Editar ${product.name}">
             ${renderIcon('./icons/edit.svg')}
             Editar
         </button>
-        <button class="bottom-sheet-item md-typescale-body-large" style="color:var(--md-sys-color-error);" onclick="deleteProduct(${JSON.stringify(product.id)})" aria-label="Eliminar ${product.name}">
+        <button class="bottom-sheet-item md-typescale-body-large" style="color:var(--md-sys-color-error);" onclick="closeBottomSheet(); deleteProduct(${JSON.stringify(product.id)})" aria-label="Eliminar ${product.name}">
             ${renderIcon('./icons/delete.svg')}
             <span>Eliminar</span>
         </button>
