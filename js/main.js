@@ -74,7 +74,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             clearTimeout(timeoutId);
             console.log('Network check successful - device is online');
-            isOnline = true;
         } catch (error) {
             console.warn('Network check failed, device may be offline:', error.message);
             isOnline = false;
