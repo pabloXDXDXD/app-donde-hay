@@ -895,6 +895,13 @@ function openBottomSheet(html) {
     console.log('Bottom sheet overlay found, adding content');
     overlay.innerHTML = `<div class="bottom-sheet-content" onclick="event.stopPropagation()">${html}</div>`;
     
+    // Add click handler to close when clicking on overlay background only
+    overlay.onclick = function(e) {
+        if (e.target === overlay) {
+            closeBottomSheet();
+        }
+    };
+    
     // Use requestAnimationFrame to ensure the DOM is updated and rendered
     // before adding the active class, which triggers the CSS transition
     requestAnimationFrame(() => {

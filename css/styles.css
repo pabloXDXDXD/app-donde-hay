@@ -92,26 +92,15 @@ body {
     display: inline-block;
     width: 24px;
     height: 24px;
-    background-image: var(--icon-url);
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: contain;
     flex-shrink: 0;
-    /* Ensure icon is visible even without mask support */
     min-width: 24px;
     min-height: 24px;
-}
-
-/* Progressive enhancement: Use mask for better color control in supported browsers */
-@supports (mask-image: none) or (-webkit-mask-image: none) {
-    .icon {
-        background-image: none;
-        background-color: currentColor;
-        mask: var(--icon-url) center / contain no-repeat;
-        -webkit-mask: var(--icon-url) center / contain no-repeat;
-        mask-size: contain;
-        -webkit-mask-size: contain;
-    }
+    /* Use mask for color control - widely supported */
+    background-color: currentColor;
+    -webkit-mask: var(--icon-url) center / contain no-repeat;
+    mask: var(--icon-url) center / contain no-repeat;
+    -webkit-mask-size: contain;
+    mask-size: contain;
 }
 
 /* Splash screen */
