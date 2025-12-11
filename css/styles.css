@@ -92,10 +92,21 @@ body {
     display: inline-block;
     width: 24px;
     height: 24px;
-    background-color: currentColor;
-    mask: var(--icon-url) center / contain no-repeat;
-    -webkit-mask: var(--icon-url) center / contain no-repeat;
+    background-image: var(--icon-url);
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    background-color: transparent;
     flex-shrink: 0;
+}
+
+@supports (mask: url("")) or (-webkit-mask: url("")) {
+    .icon {
+        background-image: none;
+        background-color: currentColor;
+        mask: var(--icon-url) center / contain no-repeat;
+        -webkit-mask: var(--icon-url) center / contain no-repeat;
+    }
 }
 
 /* Splash screen */
@@ -509,6 +520,23 @@ body {
     color: var(--md-sys-color-on-error-container);
     border-color: var(--md-sys-color-error);
     border-color: color-mix(in srgb, var(--md-sys-color-error-container) 80%, var(--md-sys-color-error));
+}
+
+.banner-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-3);
+}
+
+.banner-loader {
+    width: 18px;
+    height: 18px;
+    border: 3px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    flex-shrink: 0;
 }
 
 .skeleton-card {

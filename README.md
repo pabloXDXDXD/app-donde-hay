@@ -4,7 +4,7 @@ Este documento proporciona una descripción detallada de la arquitectura, funcio
 
 ## 1. Descripción General
 
-La aplicación es una Single-Page Application (SPA) que permite a los usuarios gestionar un inventario de productos y el perfil de su tienda. Los recursos visuales (estilos, componentes y los íconos locales) permanecen disponibles sin conexión, mientras que los datos (tiendas y productos) se consultan siempre en línea para evitar inconsistencias.
+La aplicación es una Single-Page Application (SPA) que permite a los usuarios gestionar un inventario de productos y el perfil de su tienda. Los recursos visuales (estilos, componentes y los íconos locales) permanecen disponibles sin conexión, y los datos (tiendas y productos) se conservan en caché local con una cola de sincronización para seguir funcionando si no hay conectividad.
 
 La interfaz de usuario sigue los principios de **Material Design 3**, utilizando un tema oscuro personalizado con:
 - Sistema de elevación con sombras apropiadas (3 niveles)
@@ -74,8 +74,8 @@ La lógica principal se puede dividir en las siguientes áreas:
     *   `navigateTo()` controla la navegación entre las páginas internas del menú (Productos, Tienda, Ajustes).
 
 3.  **Gestión de Datos (CRUD)**:
-    *   **Fuentes de datos**: La aplicación consulta siempre los datos de tienda y productos directamente en Supabase; no se mantienen copias locales para evitar inconsistencias.
-    *   **Sincronización**: La función `refreshData()` se ejecuta cuando hay conexión para obtener los datos más recientes de Supabase y actualizar la interfaz.
+    *   **Fuentes de datos**: La aplicación consulta los datos de tienda y productos desde Supabase, pero mantiene una copia en `localStorage` para poder mostrarlos sin conexión.
+    *   **Sincronización**: La función `refreshData()` se ejecuta cuando hay conexión para obtener los datos más recientes y actualizar la caché local. Los cambios hechos sin conexión se encolan y se envían automáticamente cuando la conexión vuelve a estar disponible.
     *   **Funciones CRUD**:
         *   `submitStore()`: Crea o actualiza el perfil de la tienda.
         *   `deleteStore()`: Elimina permanentemente la tienda y todos los productos asociados.
@@ -121,8 +121,8 @@ La comunicación entre el WebView y la aplicación nativa de Android se realiza 
 ## 6. Notas Técnicas y Correcciones Recientes
 
 ### Gestión de Caché y Persistencia
--   **Problema resuelto**: La función `loadCache()` ahora limpia cualquier caché heredada y reinicia el estado en memoria para evitar que tiendas eliminadas reaparezcan tras cerrar sesión y volver a iniciar.
--   Los datos de tienda y productos ya no se almacenan en `localStorage`; siempre se consultan en línea para mostrar información fresca.
+-   **Problema resuelto**: La función `loadCache()` ahora limpia cualquier caché heredada y reinicia el estado en memoria cuando cambia el usuario, evitando que tiendas eliminadas reaparezcan tras cerrar sesión y volver a iniciar.
+-   Los datos de tienda y productos se guardan en `localStorage` junto con una cola de operaciones pendientes (`pending_ops`) para que la app muestre la última información disponible y permita crear/editar/eliminar sin conexión.
 
 ### CRUD de Productos
 -   **Problema resuelto**: Las operaciones de editar y eliminar productos ahora funcionan correctamente.
